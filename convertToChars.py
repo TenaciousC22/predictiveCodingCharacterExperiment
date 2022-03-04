@@ -12,15 +12,15 @@ for entry in dirs:
 	dirWalk=os.walk(path)
 	for walkEntry in dirWalk:
 		files=walkEntry[2]
+	
+	x=0
+	while x < len(files):
+		if ".txt" not in files[x]:
+			files.pop(x)
+		else:
+			x+=1
 
 	print(files)
-	
-# 	x=0
-# 	while x < len(files):
-# 		if ".txt" not in files[x]:
-# 			files.pop(x)
-# 		else:
-# 			x+=1
 
 # 	for file in files:
 # 		openable=entry+"/"+file
