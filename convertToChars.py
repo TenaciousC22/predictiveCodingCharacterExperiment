@@ -13,7 +13,7 @@ while x < len(dirs):
 	else:
 		x+=1
 
-for entry in tdqm(dirs):
+for entry in tqdm(dirs):
 	path=base_dir+"/"+entry
 	dirWalk=os.walk(path)
 	for walkEntry in dirWalk:
