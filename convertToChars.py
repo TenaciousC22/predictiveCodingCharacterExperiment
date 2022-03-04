@@ -14,6 +14,8 @@ for entry in dirs:
 	walk=os.walk(entry)
 	for walkEntry in walk:
 		files=walkEntry[2]
+
+	print(entry)
 	
 	x=0
 	while x < len(files):
