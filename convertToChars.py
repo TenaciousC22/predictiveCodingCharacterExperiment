@@ -11,7 +11,7 @@ for entry in walk:
 	dirs.append(entry[0])
 	#print(entry[0])
 
-for direcorty in dirs:
+for directory in dirs:
 	print(directory)
 
 for entry in dirs:
