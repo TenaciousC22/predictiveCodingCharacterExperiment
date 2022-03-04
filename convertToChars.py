@@ -14,8 +14,6 @@ for entry in dirs:
 	walk=os.walk(entry)
 	for entry in walk:
 		files=entry[2]
-
-	print(files)
 	
 	x=0
 	while x < len(files):
@@ -24,4 +22,6 @@ for entry in dirs:
 		else:
 			x+=1
 
-	print(files)
+	for file in files:
+		f=open("/".join(base_dir,entry,file),"r")
+		print(f.read(0))
