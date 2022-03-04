@@ -9,7 +9,7 @@ dirs=os.listdir(base_dir)
 for entry in dirs:
 	path=base_dir+"/"+entry
 	print(path)
-	dirWalk=os.walk(entry)
+	dirWalk=os.walk(path)
 	for walkEntry in dirWalk:
 		files=walkEntry[2]
 
