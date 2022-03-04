@@ -12,8 +12,8 @@ for entry in walk:
 
 for entry in dirs:
 	walk=os.walk(entry)
-	for entry in walk:
-		files=entry[2]
+	for walkEntry in walk:
+		files=walkEntry[2]
 	
 	x=0
 	while x < len(files):
