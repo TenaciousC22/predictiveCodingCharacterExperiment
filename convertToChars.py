@@ -38,7 +38,7 @@ for entry in tqdm(dirs):
 		f=open(openable,"r")
 		text=splitString(f.readline())
 		f.close()
-		outputName=file[0:5]+"-words.txt"
+		outputName=path+"/"+file[0:5]+"-words.txt"
 		f=open(outputName,"w")
 		f.write(text)
 		f.close()
