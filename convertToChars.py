@@ -14,4 +14,4 @@ for entry in dirs:
 	walk=os.walk(entry)
 	for entry in walk:
 		files=entry[2]
-	# print(files)
+	print(files)
