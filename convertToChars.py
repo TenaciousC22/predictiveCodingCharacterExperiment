@@ -14,4 +14,9 @@ for entry in dirs:
 	walk=os.walk(entry)
 	for entry in walk:
 		files=entry[2]
+	
+	for x in range(len(files)):
+		if ".txt" not in files[x]:
+			files.pop(x)
+
 	print(files)
