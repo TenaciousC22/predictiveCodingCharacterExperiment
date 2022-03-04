@@ -9,15 +9,16 @@ walk=os.walk("/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main")
 dirs=[]
 for entry in walk:
 	dirs.append(entry[0])
-	print(entry[0])
+	#print(entry[0])
+
+for direcorty in dirs:
+	print(directory)
 
 for entry in dirs:
 
 	dirWalk=os.walk(entry)
 	for walkEntry in dirWalk:
 		files=walkEntry[2]
-
-	print(entry)
 	
 	x=0
 	while x < len(files):
