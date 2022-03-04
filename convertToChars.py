@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 def splitString(base):
 	split=base[7:]
-	print(split)
+	#print(split)
 
 base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
 
