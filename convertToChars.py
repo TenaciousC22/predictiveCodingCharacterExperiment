@@ -11,11 +11,10 @@ for entry in walk:
 	dirs.append(entry[0])
 	#print(entry[0])
 
-for directory in dirs:
-	print(directory)
+
 
 for entry in dirs:
-
+	print(entry)
 	dirWalk=os.walk(entry)
 	for walkEntry in dirWalk:
 		files=walkEntry[2]
