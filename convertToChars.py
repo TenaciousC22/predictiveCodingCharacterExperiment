@@ -12,8 +12,9 @@ for entry in walk:
 	print(entry[0])
 
 for entry in dirs:
-	walk=os.walk(entry)
-	for walkEntry in walk:
+
+	dirWalk=os.walk(entry)
+	for walkEntry in dirWalk:
 		files=walkEntry[2]
 
 	print(entry)
