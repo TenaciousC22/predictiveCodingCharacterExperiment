@@ -23,7 +23,7 @@ for entry in dirs:
 			x+=1
 
 	for file in files:
-		openable="/".join(base_dir,entry,file)
+		openable="/".join((base_dir,entry,file))
 		print(openable)
 		f=open(openable,"r")
 		print(f.read(0))
