@@ -10,7 +10,6 @@ for entry in dirs:
 	if ".wav" in entry:
 		continue
 	path=base_dir+"/"+entry
-	print(path)
 	dirWalk=os.walk(path)
 	for walkEntry in dirWalk:
 		files=walkEntry[2]
@@ -26,4 +25,4 @@ for entry in dirs:
 		openable=path+"/"+file
 		print(openable)
 		f=open(openable,"r")
-		print(f.read(0))
+		print(f.read(1))
