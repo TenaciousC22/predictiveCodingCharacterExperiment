@@ -7,6 +7,8 @@ base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
 dirs=os.listdir(base_dir)
 
 for entry in dirs:
+	if ".wav" in entry:
+		continue
 	path=base_dir+"/"+entry
 	print(path)
 	dirWalk=os.walk(path)
@@ -19,8 +21,6 @@ for entry in dirs:
 			files.pop(x)
 		else:
 			x+=1
-
-	print(files)
 
 	for file in files:
 		openable=path+"/"+file
