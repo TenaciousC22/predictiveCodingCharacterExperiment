@@ -4,6 +4,10 @@ import torch
 import numpy as np
 from torch.utils import data
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from generators.librispeech import LRS2AudioVisualPhonemeDataset, LRS2UnsupervisedLoader, LRS2AudioVisualCachedPhonemeDataset
+from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightning
+from util.pad import audiovisual_batch_collate, audiovisual_embedding_batch_collate
 
 params={'batch_size': 8,
 		'shuffle': True,
@@ -14,3 +18,7 @@ val_params={'batch_size': 8,
 		'num_workers': 3}
 
 base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2"
+src_ckpt="/home/analysis/Documents/studentHDD/chris/lightning_logs/version_0/checkpoints/epoch=10-step=63018.ckpt"
+
+train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
+train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"

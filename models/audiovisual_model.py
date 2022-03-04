@@ -604,3 +604,78 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
         g_params = list(self.phoneme_criterion.parameters())
         optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
         return optimizer
+
+
+class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
+    def __init__(self, src_checkpoint_path, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+        super().__init__()
+        self.dim_size = dim_size
+        self.batch_size = batch_size
+
+        self.audio_encoder = CPCAudioEncoder(sizeHidden=dim_size)
+        self.visual_encoder = CPCVisualEncoder(sizeHidden=dim_size)
+
+        self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
+        self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
+
+        self.phoneme_criterion = CTCPhoneCriterion(self.dim_size, 43, LSTM=LSTM)
+
+        self.cached = cached
+
+        if src_checkpoint_path is not None:
+            checkpoint = torch.load(src_checkpoint_path)
+            self.load_state_dict(checkpoint['state_dict'], strict=False)
+
+        if freeze:
+            self.cpc_model.eval()
+
+            for g in self.cpc_model.parameters():
+                g.requires_grad = False
+
+
+    def training_step(self, x, batch_idx):
+        ctc_loss = self.shared_step(x, batch_idx)
+        self.log("train_loss", ctc_loss)
+
+        return ctc_loss
+
+    def validation_step(self, x, batch_idx):
+        ctc_loss = self.shared_step(x, batch_idx)
+        self.log("val_loss", ctc_loss)
+
+        return ctc_loss
+
+    def test_step(self, x, batch_idx):
+        ctc_loss = self.shared_step(x, batch_idx)
+        self.log("test_loss", ctc_loss)
+
+        return ctc_loss
+
+    def shared_step(self, data, batch_idx):
+        x, x_len, label, label_len = data
+
+        if not self.cached:
+            cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True, audioVisual=True)
+            x_len //= 160
+        else:
+            cFeature = x
+
+        # mean = cFeature.mean(dim=1, keepdim=True)
+        # var = cFeature.var(dim=1, keepdim=True)
+        # cFeature = (cFeature - mean) / torch.sqrt(var + 1e-08)
+
+        allLosses = self.phoneme_criterion(cFeature, x_len, label, label_len)
+
+        loss = allLosses.sum()
+        return loss
+
+    def get_predictions(self, x):
+        cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
+        predictions = torch.nn.functional.softmax(self.phoneme_criterion.getPrediction(cFeature), dim=2)
+
+        return predictions
+
+    def configure_optimizers(self):
+        g_params = list(self.phoneme_criterion.parameters())
+        optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
+        return optimizer
