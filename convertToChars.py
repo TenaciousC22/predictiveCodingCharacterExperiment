@@ -6,6 +6,8 @@ base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
 
 contents=os.listdir(base_dir)
 
+print(contents)
+
 dirs=[]
 for item in contents:
 	if os.path.isdir(item):
