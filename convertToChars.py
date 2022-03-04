@@ -27,6 +27,8 @@ for entry in tqdm(dirs):
 	while x < len(files):
 		if ".txt" not in files[x]:
 			files.pop(x)
+		elif "words" in files[x]:
+			files.pop(x)
 		else:
 			x+=1
 
@@ -34,4 +36,7 @@ for entry in tqdm(dirs):
 		openable=path+"/"+file
 		f=open(openable,"r")
 		text=splitString(f.readline())
+		f.close()
+		outputName=file[0:5]+"-words.txt"
+		print(outputName)
 		#print(f.read())
