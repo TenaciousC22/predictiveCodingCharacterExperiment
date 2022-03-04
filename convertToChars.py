@@ -4,15 +4,19 @@ from tqdm import tqdm
 
 base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
 
-walk=os.walk("/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main")
+contents=os.listdir(base_dir)
 
 dirs=[]
-for x in range(len(walk)):
-	dirs.append(walk[x][0])
-	#print(entry[0])
+for item in contents:
+	if os.path.isdir(item):
+		dirs.append(item)
+		print(item)
+# for x in range(len(walk)):
+# 	dirs.append(walk[x][0])
+# 	#print(entry[0])
 
-for x in range(len(dirs)):
-	print(dirs)
+# for x in range(len(dirs)):
+# 	print(dirs)
 
 # for entry in dirs:
 # 	print(entry)
