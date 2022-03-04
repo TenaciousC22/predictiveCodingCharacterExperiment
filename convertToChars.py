@@ -12,7 +12,6 @@ for entry in walk:
 
 for entry in dirs:
 	walk=os.walk(entry)
-	print(walk)
 	for entry in walk:
-		print(entry)
+		files=entry[2]
 	# print(files)
