@@ -30,4 +30,4 @@ for entry in tqdm(dirs):
 		openable=path+"/"+file
 
 		f=open(openable,"r")
-		print(f.read())
+		#print(f.read())
