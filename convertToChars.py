@@ -38,5 +38,7 @@ for entry in tqdm(dirs):
 		text=splitString(f.readline())
 		f.close()
 		outputName=file[0:5]+"-words.txt"
-		print(outputName)
+		f=open(outputName,"w")
+		f.write(text)
+		f.close()
 		#print(f.read())
