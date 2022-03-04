@@ -23,6 +23,6 @@ for entry in dirs:
 
 	for file in files:
 		openable=path+"/"+file
-		print(openable)
+
 		f=open(openable,"r")
-		print(f.read(1))
+		print(f.read())
