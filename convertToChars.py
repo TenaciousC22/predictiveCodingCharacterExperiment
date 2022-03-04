@@ -22,8 +22,8 @@ for entry in dirs:
 
 	print(files)
 
-# 	for file in files:
-# 		openable=entry+"/"+file
-# 		print(openable)
-# 		f=open(openable,"r")
-# 		print(f.read(0))
+	for file in files:
+		openable=path+"/"+file
+		print(openable)
+		f=open(openable,"r")
+		print(f.read(0))
