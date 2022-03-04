@@ -23,5 +23,5 @@ for entry in dirs:
 			x+=1
 
 	for file in files:
-		f=open("/".join(base_dir,entry,file),"r")
+		f=open("/".join((base_dir,entry,file),"r")
 		print(f.read(0))
