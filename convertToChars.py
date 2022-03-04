@@ -2,6 +2,10 @@ import os
 import numpy as np
 from tqdm import tqdm
 
+def splitString(base):
+	split=base[7:]
+	print(split)
+
 base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
 
 dirs=os.listdir(base_dir)
@@ -28,6 +32,6 @@ for entry in tqdm(dirs):
 
 	for file in files:
 		openable=path+"/"+file
-
 		f=open(openable,"r")
+		text=splitString(f.readline())
 		#print(f.read())
