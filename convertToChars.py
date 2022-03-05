@@ -55,5 +55,6 @@ for entry in tqdm(dirs):
 		for x in range(len(text)):
 			charIndex.append(char2index[text[x]])
 		arr=np.array(charIndex)
-		print(arr)
+		outputName=path+"/"+file[0:5]+"-chars.npy"
+		np.save(outputName,arr)
 		#print(f.read())
