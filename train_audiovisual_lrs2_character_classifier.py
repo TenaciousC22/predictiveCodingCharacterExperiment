@@ -24,5 +24,7 @@ train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"
 
 train_ids = LRS2UnsupervisedLoader(file_path=train_txt_path).load()
+print(train_ids)
 
 test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
+print(test_ids)
