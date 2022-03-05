@@ -54,4 +54,6 @@ for entry in tqdm(dirs):
 		charIndex=[]
 		for x in range(len(text)):
 			charIndex.append(char2index[text[x]])
+		arr=np.array(charIndex)
+		print(arr)
 		#print(f.read())
