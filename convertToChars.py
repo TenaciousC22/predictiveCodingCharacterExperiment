@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 def splitString(base):
-	split=base[7:]
+	split=base[7:-1]
 	return split
 	#print(split)
 
