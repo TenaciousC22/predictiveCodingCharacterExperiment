@@ -21,7 +21,7 @@ lrs2_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1"
 src_ckpt="/home/analysis/Documents/studentHDD/chris/lightning_logs/version_0/checkpoints/epoch=10-step=63018.ckpt"
 
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
-train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"
+test_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"
 
 train_ids = LRS2UnsupervisedLoader(file_path=train_txt_path).load()
 print(train_ids)
