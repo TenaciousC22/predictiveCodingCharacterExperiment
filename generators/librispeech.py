@@ -181,6 +181,38 @@ class LRS2AudioVisualCachedPhonemeDataset(data.Dataset):
 
         return X, X_len, Y, Y_len
 
+class LRS2AudioVisualCachedCharacterDataset(data.Dataset):
+    'Characterizes a dataset for PyTorch'
+    def __init__(self, list_IDs, dataset_dir, batch_size, embedding_extension='_audiovisual_embeddings'):
+        'Initialization'
+        maxlen = len(list_IDs)-(len(list_IDs)%batch_size)
+        self.list_IDs = list_IDs[:maxlen]
+
+        self.dataset_dir = dataset_dir
+        self.embedding_extension = embedding_extension
+
+    def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.list_IDs)
+
+    def __getitem__(self, index):
+        'Generates one sample of data'
+        # Select sample
+        ID = self.list_IDs[index]
+
+        x_data = np.load(os.path.join(self.dataset_dir + self.embedding_extension, ID + '.npy'))
+        y_data = np.load(os.path.join(self.dataset_dir, ID + '-phn.npy'))
+
+        # Load data and get label
+        X = torch.from_numpy(x_data).float()
+        X = X
+        X_len = torch.LongTensor([x_data.shape[0]])
+
+        Y = torch.from_numpy(y_data).int()
+        Y_len = torch.LongTensor([y_data.shape[0]])
+
+        return X, X_len, Y, Y_len
+
 class LRS2AudioVisualPhonemeDataset(data.Dataset):
     'Characterizes a dataset for PyTorch'
     def __init__(self, list_IDs, dataset_dir, batch_size, return_lens=False):
