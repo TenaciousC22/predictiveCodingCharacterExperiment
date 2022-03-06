@@ -201,7 +201,7 @@ class LRS2AudioVisualCachedCharacterDataset(data.Dataset):
         ID = self.list_IDs[index]
 
         x_data = np.load(os.path.join(self.dataset_dir + self.embedding_extension, ID + '.npy'))
-        y_data = np.load(os.path.join(self.dataset_dir, ID + '-phn.npy'))
+        y_data = np.load(os.path.join(self.dataset_dir, ID + '-chars.npy'))
 
         # Load data and get label
         X = torch.from_numpy(x_data).float()
