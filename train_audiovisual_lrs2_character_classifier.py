@@ -28,3 +28,4 @@ training_set = LRS2AudioVisualCachedCharacterDataset(train_ids, lrs2_path, param
 test_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"
 
 test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
+test_set = LRS2AudioVisualCachedCharacterDataset(test_ids, lrs2_path, val_params['batch_size'])
