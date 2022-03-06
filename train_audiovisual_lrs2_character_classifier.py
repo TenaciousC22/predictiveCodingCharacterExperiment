@@ -21,9 +21,10 @@ lrs2_path="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1"
 src_ckpt="/home/analysis/Documents/studentHDD/chris/lightning_logs/version_0/checkpoints/epoch=10-step=63018.ckpt"
 
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
-test_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"
 
 train_ids = LRS2UnsupervisedLoader(file_path=train_txt_path).load()
 training_set = LRS2AudioVisualCachedCharacterDataset(train_ids, lrs2_path, params['batch_size'])
+
+test_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/val.txt"
 
 test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
