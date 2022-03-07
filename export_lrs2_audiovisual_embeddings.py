@@ -29,8 +29,8 @@ model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 
-libri_path = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
-dest_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1_embeddings/main"
+libri_path = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/pretrain"
+dest_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1_embeddings/pretrain"
 
 train_output = True
 
@@ -44,8 +44,6 @@ for folder in os.listdir(libri_path):
                 continue
 
             jobs.append((folder, file))
-
-print(jobs)
 
 for folder, file in tqdm(jobs):
     if not train_output:
@@ -68,7 +66,6 @@ for folder, file in tqdm(jobs):
     embedding = model.embedding((x_audio_tensor, x_visual_tensor), context=True, audioVisual=True, norm=False)
 
     embedding = torch.squeeze(embedding).detach().cpu().numpy()
-    print(embedding)
 
     #print(embedding.shape)
     np.save(dest, embedding)
