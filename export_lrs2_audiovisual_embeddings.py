@@ -51,8 +51,8 @@ for folder, file in tqdm(jobs):
     else:
         dest = os.path.join(dest_dir, folder, file.replace('.wav', '.npy'))
 
-    if os.path.exists(dest):
-        continue
+    # if os.path.exists(dest):
+    #     continue
 
     if not os.path.exists(os.path.join(dest_dir, folder)):
         os.makedirs(os.path.join(dest_dir, folder))
