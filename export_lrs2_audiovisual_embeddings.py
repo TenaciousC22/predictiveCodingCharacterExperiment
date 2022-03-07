@@ -29,8 +29,8 @@ model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 
-libri_path = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/pretrain"
-dest_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1_embeddings/pretrain"
+libri_path = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
+dest_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1_audiovisual_embeddings/main"
 
 train_output = True
 

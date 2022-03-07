@@ -18,7 +18,7 @@ val_params={'batch_size': 8,
 		'num_workers': 3}
 
 lrs2_path="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1"
-src_ckpt="/home/analysis/Documents/studentHDD/chris/lightning_logs/version_0/checkpoints/epoch=10-step=63018.ckpt"
+src_ckpt='/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/epoch=50-step=906218.ckpt'
 
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
 
@@ -32,7 +32,7 @@ test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
 test_set = LRS2AudioVisualCachedCharacterDataset(test_ids, lrs2_path, val_params['batch_size'])
 test_generator = data.DataLoader(test_set, collate_fn=audiovisual_embedding_batch_collate, **val_params)
 
-network = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=None, batch_size=params['batch_size'], LSTM=True) 
+network = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True) 
 
 trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='val_loss', patience=5)], default_root_dir="lrs2_audiovisual_lstm_character_classifier_lightning_logs")
 trainer.fit(network, training_generator, test_generator)
