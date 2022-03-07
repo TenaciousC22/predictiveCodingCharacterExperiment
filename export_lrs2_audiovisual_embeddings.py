@@ -20,7 +20,7 @@ from models.audiovisual_model import FBAudioVisualCPCLightning
 
 model = FBAudioVisualCPCLightning(batch_size=1).cuda()
 
-checkpoint = torch.load('/home/lukas/Dev/speech_cpc/lrs2_audiovisual_predictor_lightning_logs/lightning_logs/version_1/checkpoints/epoch=50-step=906218.ckpt')
+checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/epoch=50-step=906218.ckpt')
 
 #print(model.cpc_model.gEncoder.conv0.weight)
 
@@ -29,8 +29,8 @@ model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 
-libri_path = "/home/lukas/Dropbox/mcgurk_dataset/mcgurk_video"
-dest_dir = "/home/lukas/Dropbox/mcgurk_dataset/mcgurk_video_embeddings"
+libri_path = "/home/analysis/Documents/studentHDD/datasets/mvlrs_v1"
+dest_dir = "/home/analysis/Documents/studentHDD/datasets/mvlrs_v1_embeddings"
 
 train_output = True
 
