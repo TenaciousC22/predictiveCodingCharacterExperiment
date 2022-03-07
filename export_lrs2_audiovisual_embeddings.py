@@ -45,6 +45,8 @@ for folder in os.listdir(libri_path):
 
             jobs.append((folder, file))
 
+print(jobs)
+
 for folder, file in tqdm(jobs):
     if not train_output:
         dest = os.path.join(dest_dir, folder+'-'+file.replace('.wav', '.npy'))
