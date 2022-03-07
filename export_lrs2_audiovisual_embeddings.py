@@ -66,6 +66,7 @@ for folder, file in tqdm(jobs):
     embedding = model.embedding((x_audio_tensor, x_visual_tensor), context=True, audioVisual=True, norm=False)
 
     embedding = torch.squeeze(embedding).detach().cpu().numpy()
+    print(embedding)
 
     #print(embedding.shape)
     np.save(dest, embedding)
