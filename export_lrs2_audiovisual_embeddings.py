@@ -29,8 +29,8 @@ model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 
-libri_path = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1"
-dest_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1_embeddings"
+libri_path = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
+dest_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1_embeddings/main"
 
 train_output = True
 
@@ -44,6 +44,8 @@ for folder in os.listdir(libri_path):
                 continue
 
             jobs.append((folder, file))
+
+print(jobs)
 
 for folder, file in tqdm(jobs):
     if not train_output:
