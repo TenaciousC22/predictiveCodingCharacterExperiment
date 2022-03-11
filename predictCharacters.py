@@ -85,3 +85,6 @@ test_params = {'batch_size': 1,
 model.eval()
 
 testIDs=createDatasetPaths()
+
+testSet=LRS2AudioVisualPhonemeDataset(testIDs, datasetPath, test_params['batch_size'])
+testGenerator = data.DataLoader(testSet, collate_fn=audiovisual_batch_collate, **test_params)
