@@ -45,7 +45,7 @@ def createDatasetPaths():
 	return paths
 
 #Get a full list of all videos with speakers, sentences, and offsets
-per_ckpt="/home/analysis/Documents/studentHDD/chris/predicitiveCodingCharacterExperiment/lightning_logs/version_3/checkpoints/epoch=6-step=40102.ckpt"
+per_ckpt="/home/analysis/Documents/studentHDD/chris/predicitiveCodingCharacterExperiment/lrs2_audiovisual_lstm_character_classifier_lightning_logs/lightning_logs/version_3/checkpoints/epoch=6-step=40102.ckpt"
 dest_csv="/home/analysis/Documents/studentHDD/chris/predicitiveCodingCharacterExperiment/predicitiveCodingCharacterResults.csv"
 datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips/"
 
