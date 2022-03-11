@@ -51,3 +51,18 @@ datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips/"
 
 model = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True).cuda()
 per_checkpoint = torch.load(per_ckpt)
+
+model.load_state_dict(per_checkpoint['state_dict'])
+
+avgPER = 0
+nItems = 0
+
+downsamplingFactor = 160
+
+test_params = {'batch_size': 1,
+    'shuffle': False,
+    'num_workers': 3}
+
+model.eval()
+
+testIDs=createDatasetPaths()
