@@ -88,3 +88,15 @@ testIDs=createDatasetPaths()
 
 testSet=LRS2AudioVisualPhonemeDataset(testIDs, datasetPath, test_params['batch_size'])
 testGenerator = data.DataLoader(testSet, collate_fn=audiovisual_batch_collate, **test_params)
+
+resultArr=[]
+for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
+    i = index
+    with torch.no_grad():
+        x_audio, x_visual, y = data
+        x_audio = x_audio.cuda()
+        x_visual = x_visual.cuda()
+        y = y.squeeze()
+        y_hat = model.get_predictions((x_audio, x_visual)).squeeze()
+
+        predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
