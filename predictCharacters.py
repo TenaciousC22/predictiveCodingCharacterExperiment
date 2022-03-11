@@ -14,6 +14,11 @@ from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightni
 from util.pad import audiovisual_batch_collate
 from util.seq_alignment import beam_search
 
+index2char={1:" ", 22:"'", 30:"1", 29:"0", 37:"3", 32:"2", 34:"5", 38:"4", 36:"7", 35:"6", 31:"9", 33:"8",
+    5:"A", 17:"C", 20:"B", 2:"E", 12:"D", 16:"G", 19:"F", 6:"I", 9:"H", 24:"K", 25:"J", 18:"M",
+    11:"L", 4:"O", 7:"N", 27:"Q", 21:"P", 8:"S", 10:"R", 13:"U", 3:"T", 15:"W", 23:"V", 14:"Y",
+    26:"X", 28:"Z", 39:"<EOS>"}    #index to character reverse mapping
+
 offsetMap={
     0:"I840",
     1:"I720",
@@ -55,13 +60,17 @@ def levenshtein(a, b):
 
 def createDatasetPaths():
 	paths=[]
+    speakers=[]
+    clips=[]
 
 	for x in range(6):
 		for y in range(28):
 			for key in offsetMap:
+                speakers.append(x+1)
+                clips.append(y+1)
 				paths.append("speaker"+str(x+1)+"clip"+str(y+1)+offsetMap[key])
 
-	return paths
+	return paths, speakers, clips
 
 #Get a full list of all videos with speakers, sentences, and offsets
 per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/lrs2_audiovisual_lstm_character_classifier_lightning_logs/lightning_logs/version_3/checkpoints/epoch=6-step=40102.ckpt"
@@ -84,7 +93,7 @@ test_params = {'batch_size': 1,
 
 model.eval()
 
-testIDs=createDatasetPaths()
+testIDs, speakers, clips=createDatasetPaths()
 
 testSet=LRS2AudioVisualPhonemeDataset(testIDs, datasetPath, test_params['batch_size'])
 testGenerator = data.DataLoader(testSet, collate_fn=audiovisual_batch_collate, **test_params)
@@ -101,4 +110,13 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 
         predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
 
-        print(predSeq)
+        resultArr.append([])
+        resultArr[-1].append(speakers[i])
+        resultArr[-1].append(clips[i])
+        resultArr[-1].append(offsetMap[i%16])
+
+        for x in predSeq:
+            resultArr[-1].append(index2char[x])
+
+for entry in resultArr:
+    print(entry)
