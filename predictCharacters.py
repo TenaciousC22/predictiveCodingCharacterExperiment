@@ -118,5 +118,6 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 		for x in predSeq:
 			resultArr[-1].append(index2char[x])
 
-for entry in resultArr:
-	print(entry)
+with open(dest_csv,"w") as file:
+	writer=csv.writer(file,delimiter=',')
+	writer.writerows(resultArr)
