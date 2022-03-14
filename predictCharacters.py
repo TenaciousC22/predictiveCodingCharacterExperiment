@@ -74,7 +74,7 @@ def createDatasetPaths():
 
 #Get a full list of all videos with speakers, sentences, and offsets
 per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/lrs2_audiovisual_lstm_character_classifier_lightning_logs/lightning_logs/version_3/checkpoints/epoch=6-step=40102.ckpt"
-dest_csv="/home/analysis/Documents/studentHDD/chris/predicitiveCodingCharacterExperiment/predicitiveCodingCharacterResults.csv"
+dest_csv="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/predicitiveCodingCharacterResults.csv"
 datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips/"
 
 model = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True).cuda()
