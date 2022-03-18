@@ -109,7 +109,7 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 		print(y)
 		y_hat = model.get_predictions((x_audio, x_visual)).squeeze()
 
-		print(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1])
+		#print(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1])
 
 		predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
 
