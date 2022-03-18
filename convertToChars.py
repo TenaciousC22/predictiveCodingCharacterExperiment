@@ -10,11 +10,11 @@ def splitString(base):
 char2index={" ":0, "'":21, "1":29, "0":28, "3":36, "2":31, "5":33, "4":37, "7":35, "6":34, "9":30, "8":32,
 	"A":4, "C":16, "B":19, "E":1, "D":11, "G":15, "F":18, "I":5, "H":8, "K":23, "J":24, "M":17,
 	"L":10, "O":3, "N":6, "Q":26, "P":20, "S":7, "R":9, "U":12, "T":2, "W":14, "V":22, "Y":13,
-	"X":25, "Z":27, "":28}    #character to index mapping
+	"X":25, "Z":27, "":38}    #character to index mapping
 index2char={0:" ", 21:"'", 29:"1", 28:"0", 36:"3", 31:"2", 33:"5", 37:"4", 35:"7", 34:"6", 30:"9", 32:"8",
 	4:"A", 16:"C", 19:"B", 1:"E", 11:"D", 15:"G", 18:"F", 5:"I", 8:"H", 23:"K", 24:"J", 17:"M",
 	10:"L", 3:"O", 6:"N", 26:"Q", 20:"P", 7:"S", 9:"R", 12:"U", 2:"T", 14:"W", 22:"V", 13:"Y",
-	25:"X", 27:"Z", 28:""}    #index to character reverse mapping
+	25:"X", 27:"Z", 38:""}    #index to character reverse mapping
 
 base_dir="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1/main"
 

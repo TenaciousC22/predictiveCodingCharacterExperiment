@@ -17,7 +17,7 @@ from util.seq_alignment import beam_search
 index2char={0:" ", 21:"'", 29:"1", 28:"0", 36:"3", 31:"2", 33:"5", 37:"4", 35:"7", 34:"6", 30:"9", 32:"8",
 	4:"A", 16:"C", 19:"B", 1:"E", 11:"D", 15:"G", 18:"F", 5:"I", 8:"H", 23:"K", 24:"J", 17:"M",
 	10:"L", 3:"O", 6:"N", 26:"Q", 20:"P", 7:"S", 9:"R", 12:"U", 2:"T", 14:"W", 22:"V", 13:"Y",
-	25:"X", 27:"Z", 28:""}    #index to character reverse mapping
+	25:"X", 27:"Z", 38:""}    #index to character reverse mapping
 
 offsetMap={
 	0:"I840",

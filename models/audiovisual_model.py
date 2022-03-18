@@ -618,7 +618,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
         self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
         self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 
-        self.phoneme_criterion = CTCPhoneCriterion(self.dim_size, 39, LSTM=LSTM)
+        self.phoneme_criterion = CTCPhoneCriterion(self.dim_size, 38, LSTM=LSTM)
 
         self.cached = cached
 
