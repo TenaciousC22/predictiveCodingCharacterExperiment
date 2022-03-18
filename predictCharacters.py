@@ -14,10 +14,10 @@ from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightni
 from util.pad import audiovisual_batch_collate
 from util.seq_alignment import beam_search
 
-index2char={1:" ", 22:"'", 30:"1", 29:"0", 37:"3", 32:"2", 34:"5", 38:"4", 36:"7", 35:"6", 31:"9", 33:"8",
-	5:"A", 17:"C", 20:"B", 2:"E", 12:"D", 16:"G", 19:"F", 6:"I", 9:"H", 24:"K", 25:"J", 18:"M",
-	11:"L", 4:"O", 7:"N", 27:"Q", 21:"P", 8:"S", 10:"R", 13:"U", 3:"T", 15:"W", 23:"V", 14:"Y",
-	26:"X", 28:"Z", 39:"<EOS>"}    #index to character reverse mapping
+index2char={0:" ", 21:"'", 29:"1", 28:"0", 36:"3", 31:"2", 33:"5", 37:"4", 35:"7", 34:"6", 30:"9", 32:"8",
+	4:"A", 16:"C", 19:"B", 1:"E", 11:"D", 15:"G", 18:"F", 5:"I", 8:"H", 23:"K", 24:"J", 17:"M",
+	10:"L", 3:"O", 6:"N", 26:"Q", 20:"P", 7:"S", 9:"R", 12:"U", 2:"T", 14:"W", 22:"V", 13:"Y",
+	25:"X", 27:"Z"}    #index to character reverse mapping
 
 offsetMap={
 	0:"I840",
