@@ -105,8 +105,7 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 		x_audio, x_visual, y = data
 		x_audio = x_audio.cuda()
 		x_visual = x_visual.cuda()
-		y = y.squeeze()
-		print(y)
+		#y = y.squeeze()
 		y_hat = model.get_predictions((x_audio, x_visual)).squeeze()
 
 		#print(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1])
