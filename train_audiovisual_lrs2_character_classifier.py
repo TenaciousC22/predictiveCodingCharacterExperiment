@@ -18,7 +18,7 @@ val_params={'batch_size': 8,
 		'num_workers': 3}
 
 lrs2_path="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1"
-src_ckpt='/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/lrs2_audiovisual_lstm_character_classifier_lightning_logs/lightning_logs/version_1/checkpoints/epoch=11-step=68747.ckpt'
+src_ckpt='/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/lrs2_audiovisual_lstm_character_classifier_lightning_logs/lightning_logs/version_2/checkpoints/epoch=9-step=57289.ckpt'
 
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
 
