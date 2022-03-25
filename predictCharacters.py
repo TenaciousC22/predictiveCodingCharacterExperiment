@@ -113,7 +113,8 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 
 		output_arr=y_hat.cpu().numpy()
 
-		output_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors/"+"speaker"+speakers[i]+"clip"+clips[i]+"offset"+offsetMap[i%16]".npy"
+		output_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors/"+"speaker"+speakers[i]+"clip"+clips[i]+"offset"+offsetMap[i%16]+".npy"
+		print(output_path)
 
 		np.save(output_path,output_arr)
 
