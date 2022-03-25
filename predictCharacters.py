@@ -77,6 +77,7 @@ per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExp
 dest_csv="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/predictiveCodingCharacterResults.csv"
 datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips/"
 tensor_output="/home/analysis/Documents/studentHDD/chris/data/"
+output_base_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors/"
 
 model = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True).cuda()
 per_checkpoint = torch.load(per_ckpt)
@@ -113,8 +114,8 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 
 		output_arr=y_hat.cpu().numpy()
 
-		output_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors/"+"speaker"+str(speakers[i])+"clip"+str(clips[i])+"offset"+offsetMap[i%16]+".npy"
-		print(output_path)
+		output_path=output_base_path+"speaker"+str(speakers[i])+"clip"+str(clips[i])+"offset"+offsetMap[i%16]+".npy"
+		#print(output_path)
 
 		np.save(output_path,output_arr)
 
