@@ -109,6 +109,8 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 		y = y.squeeze()
 		y_hat = model.get_predictions((x_audio, x_visual)).squeeze()
 
+		print(y_hat.cpu().numpy())
+
 		#print(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1])
 
 		predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
@@ -121,6 +123,6 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 		for x in predSeq:
 			resultArr[-1].append(index2char[x])
 
-with open(dest_csv,"w") as file:
-	writer=csv.writer(file,delimiter=',')
-	writer.writerows(resultArr)
+# with open(dest_csv,"w") as file:
+# 	writer=csv.writer(file,delimiter=',')
+# 	writer.writerows(resultArr)
