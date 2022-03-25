@@ -109,19 +109,25 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 		y = y.squeeze()
 		y_hat = model.get_predictions((x_audio, x_visual)).squeeze()
 
-		print(type(y_hat.cpu().numpy()))
+		#print(type(y_hat.cpu().numpy()))
+
+		output_arr=y_hat.cpu().numpy()
+
+		output_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors/"+"speaker"+speakers[i]+"clip"+clips[i]+"offset"+offsetMap[i%16]".npy"
+
+		np.save(output_path,output_arr)
 
 		#print(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1])
 
-		predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
+		#predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
 
-		resultArr.append([])
-		resultArr[-1].append(speakers[i])
-		resultArr[-1].append(clips[i])
-		resultArr[-1].append(offsetMap[i%16])
+		# resultArr.append([])
+		# resultArr[-1].append(speakers[i])
+		# resultArr[-1].append(clips[i])
+		# resultArr[-1].append(offsetMap[i%16])
 
-		for x in predSeq:
-			resultArr[-1].append(index2char[x])
+		# for x in predSeq:
+		# 	resultArr[-1].append(index2char[x])
 
 # with open(dest_csv,"w") as file:
 # 	writer=csv.writer(file,delimiter=',')
