@@ -460,7 +460,6 @@ class CTCPhoneCriterion(torch.nn.Module):
 
         return loss
 
-
 class FBAudioVisualCPCLightning(pl.LightningModule):
     def __init__(self, dim_size=256, pred_steps=12, negative_samples=128, batch_size=8, pred_rnn_mode="transformer", seq_len=20480, encoder="audio"):
         super().__init__()
@@ -605,6 +604,64 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
         optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
         return optimizer
 
+class CTCCharacterCriterion(torch.nn.Module):
+
+    def __init__(self, dimEncoder, nPhones, LSTM=False, sizeKernel=8,
+                 seqNorm=False, dropout=False, reduction='mean'):
+
+        super(CTCPhoneCriterion, self).__init__()
+        self.seqNorm = seqNorm
+        self.epsilon = 1e-8
+        self.dropout = torch.nn.Dropout2d(
+            p=0.5, inplace=False) if dropout else None
+        self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder,
+                                   num_layers=1, batch_first=True)
+        self.PhoneCriterionClassifier = torch.nn.Conv1d(
+            dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
+        self.lossCriterion = torch.nn.CTCLoss(blank=nPhones,
+                                              reduction=reduction,
+                                              zero_infinity=True)
+        self.relu = torch.nn.ReLU()
+        self.BLANK_LABEL = nPhones
+        self.useLSTM = LSTM
+
+    def getPrediction(self, cFeature):
+        B, S, H = cFeature.size()
+        if self.seqNorm:
+            m = cFeature.mean(dim=1, keepdim=True)
+            v = cFeature.var(dim=1, keepdim=True)
+            cFeature = (cFeature - m) / torch.sqrt(v + self.epsilon)
+        if self.useLSTM:
+            cFeature = self.relu(cFeature)
+            cFeature = self.conv1(cFeature)[0]
+
+        cFeature = cFeature.permute(0, 2, 1)
+
+        if self.dropout is not None:
+            cFeature = self.dropout(cFeature)
+
+        return self.PhoneCriterionClassifier(cFeature).permute(0, 2, 1)
+
+    def forward(self, cFeature, featureSize, label, labelSize):
+
+        # cFeature.size() : batchSize x seq Size x hidden size
+        B, S, H = cFeature.size()
+        predictions = self.getPrediction(cFeature)
+        featureSize //= 4
+        predictions = cutData(predictions, featureSize)
+        featureSize = torch.clamp(featureSize, max=predictions.size(1))
+        label = cutData(label, labelSize)
+        if labelSize.min() <= 0:
+            print(label, labelSize)
+        predictions = torch.nn.functional.log_softmax(predictions, dim=2)
+        predictions = predictions.permute(1, 0, 2)
+        loss = self.lossCriterion(predictions, label,
+                                  featureSize, labelSize).view(1, -1)
+
+        if torch.isinf(loss).sum() > 0 or torch.isnan(loss).sum() > 0:
+            loss = 0
+
+        return loss
 
 class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
     def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
@@ -618,7 +675,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
         self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
         self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 
-        self.phoneme_criterion = CTCPhoneCriterion(self.dim_size, 38, LSTM=LSTM)
+        self.phoneme_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
 
         self.cached = cached
 
