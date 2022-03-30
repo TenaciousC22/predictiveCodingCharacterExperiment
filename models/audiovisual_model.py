@@ -632,7 +632,6 @@ class CTCCharacterCriterion(torch.nn.Module):
             v = cFeature.var(dim=1, keepdim=True)
             cFeature = (cFeature - m) / torch.sqrt(v + self.epsilon)
         if self.useLSTM:
-            cFeature = self.relu(cFeature)
             cFeature = self.conv1(cFeature)[0]
 
         cFeature = cFeature.permute(0, 2, 1)
