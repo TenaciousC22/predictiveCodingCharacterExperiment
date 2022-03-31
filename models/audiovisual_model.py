@@ -20,8 +20,7 @@ class ChannelNorm(nn.Module):
 
 		super(ChannelNorm, self).__init__()
 		if affine:
-			self.weight = nn.parameter.Parameter(
-				torch.Tensor(1, numFeatures, 1))
+			self.weight = nn.parameter.Parameter(torch.Tensor(1, numFeatures, 1))
 			self.bias = nn.parameter.Parameter(torch.Tensor(1, numFeatures, 1))
 		else:
 			self.weight = None
@@ -64,62 +63,6 @@ class ShiftedConv(nn.Module):
 		x = torch.cat([padding, x], dim=2)
 		x = self.module(x)
 		x = x.permute(0, 2, 1)
-		return x
-
-class CPCAudioEncoder(nn.Module):
-
-	def __init__(self,
-				 sizeHidden=512):
-
-		super(CPCAudioEncoder, self).__init__()
-		normLayer = ChannelNorm
-		self.sizeHidden = sizeHidden
-		self.conv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
-		self.batchNorm0 = normLayer(sizeHidden)
-		self.conv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
-		self.batchNorm1 = normLayer(sizeHidden)
-		self.conv2 = nn.Conv1d(sizeHidden, sizeHidden, 4,
-							   stride=2, padding=1)
-		self.batchNorm2 = normLayer(sizeHidden)
-		self.conv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.batchNorm3 = normLayer(sizeHidden)
-		self.conv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.batchNorm4 = normLayer(sizeHidden)
-		self.DOWNSAMPLING = 160
-
-	def getDimOutput(self):
-		return self.conv4.out_channels
-
-	def forward(self, x):
-		x = F.relu(self.batchNorm0(self.conv0(x)))
-		x = F.relu(self.batchNorm1(self.conv1(x)))
-		x = F.relu(self.batchNorm2(self.conv2(x)))
-		x = F.relu(self.batchNorm3(self.conv3(x)))
-		x = F.relu(self.batchNorm4(self.conv4(x)))
-		return x
-
-class CPCVisualEncoder(nn.Module):
-
-	def __init__(self, sizeHidden=512, inputSeqLen=32, visualFeatureDim=512):
-
-		super(CPCVisualEncoder, self).__init__()
-		normLayer = ChannelNorm
-		self.inputSeqLen = inputSeqLen
-		self.sizeHidden = sizeHidden
-
-		self.conv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
-		self.batchNorm0 = normLayer(sizeHidden)
-
-		self.conv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
-		self.batchNorm1 = normLayer(sizeHidden)
-
-
-	def getDimOutput(self):
-		return self.conv0.out_channels
-
-	def forward(self, x):
-		x = F.relu(self.batchNorm0(self.conv0(x)))
-		x = F.relu(self.batchNorm1(self.conv1(x)))
 		return x
 
 class CPCAudioVisualAR(nn.Module):
@@ -603,64 +546,6 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
 		return optimizer
 
-class CTCCharacterCriterion(torch.nn.Module):
-
-	def __init__(self, dimEncoder, nPhones, LSTM=False, sizeKernel=8,
-				 seqNorm=False, dropout=False, reduction='mean'):
-
-		super(CTCPhoneCriterion, self).__init__()
-		self.seqNorm = seqNorm
-		self.epsilon = 1e-8
-		self.dropout = torch.nn.Dropout2d(
-			p=0.5, inplace=False) if dropout else None
-		self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder,
-								   num_layers=1, batch_first=True)
-		self.PhoneCriterionClassifier = torch.nn.Conv1d(
-			dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
-		self.lossCriterion = torch.nn.CTCLoss(blank=nPhones,
-											  reduction=reduction,
-											  zero_infinity=True)
-		self.relu = torch.nn.ReLU()
-		self.BLANK_LABEL = nPhones
-		self.useLSTM = LSTM
-
-	def getPrediction(self, cFeature):
-		B, S, H = cFeature.size()
-		if self.seqNorm:
-			m = cFeature.mean(dim=1, keepdim=True)
-			v = cFeature.var(dim=1, keepdim=True)
-			cFeature = (cFeature - m) / torch.sqrt(v + self.epsilon)
-		if self.useLSTM:
-			cFeature = self.conv1(cFeature)[0]
-
-		cFeature = cFeature.permute(0, 2, 1)
-
-		if self.dropout is not None:
-			cFeature = self.dropout(cFeature)
-
-		return self.PhoneCriterionClassifier(cFeature).permute(0, 2, 1)
-
-	def forward(self, cFeature, featureSize, label, labelSize):
-
-		# cFeature.size() : batchSize x seq Size x hidden size
-		B, S, H = cFeature.size()
-		predictions = self.getPrediction(cFeature)
-		featureSize //= 4
-		predictions = cutData(predictions, featureSize)
-		featureSize = torch.clamp(featureSize, max=predictions.size(1))
-		label = cutData(label, labelSize)
-		if labelSize.min() <= 0:
-			print(label, labelSize)
-		predictions = torch.nn.functional.log_softmax(predictions, dim=2)
-		predictions = predictions.permute(1, 0, 2)
-		loss = self.lossCriterion(predictions, label,
-								  featureSize, labelSize).view(1, -1)
-
-		if torch.isinf(loss).sum() > 0 or torch.isnan(loss).sum() > 0:
-			loss = 0
-
-		return loss
-
 class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
@@ -673,7 +558,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 
-		self.phoneme_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
 
 		self.cached = cached
 
@@ -719,7 +604,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		# var = cFeature.var(dim=1, keepdim=True)
 		# cFeature = (cFeature - mean) / torch.sqrt(var + 1e-08)
 
-		allLosses = self.phoneme_criterion(cFeature, x_len, label, label_len)
+		allLosses = self.character_criterion(cFeature, x_len, label, label_len)
 
 		loss = allLosses.sum()
 		return loss
@@ -734,3 +619,116 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		g_params = list(self.phoneme_criterion.parameters())
 		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
 		return optimizer
+
+class CPCAudioEncoder(nn.Module):
+
+	def __init__(self,
+				 sizeHidden=512):
+
+		super(CPCAudioEncoder, self).__init__()
+		normLayer = ChannelNorm
+		self.sizeHidden = sizeHidden
+		self.conv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		self.batchNorm0 = normLayer(sizeHidden)
+		self.conv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		self.batchNorm1 = normLayer(sizeHidden)
+		self.conv2 = nn.Conv1d(sizeHidden, sizeHidden, 4,
+							   stride=2, padding=1)
+		self.batchNorm2 = normLayer(sizeHidden)
+		self.conv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.batchNorm3 = normLayer(sizeHidden)
+		self.conv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.batchNorm4 = normLayer(sizeHidden)
+		self.DOWNSAMPLING = 160
+
+	def getDimOutput(self):
+		return self.conv4.out_channels
+
+	def forward(self, x):
+		x = F.relu(self.batchNorm0(self.conv0(x)))
+		x = F.relu(self.batchNorm1(self.conv1(x)))
+		x = F.relu(self.batchNorm2(self.conv2(x)))
+		x = F.relu(self.batchNorm3(self.conv3(x)))
+		x = F.relu(self.batchNorm4(self.conv4(x)))
+		return x
+
+class CPCVisualEncoder(nn.Module):
+
+	def __init__(self, sizeHidden=512, inputSeqLen=32, visualFeatureDim=512):
+
+		super(CPCVisualEncoder, self).__init__()
+		normLayer = ChannelNorm
+		self.inputSeqLen = inputSeqLen
+		self.sizeHidden = sizeHidden
+
+		self.conv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		self.batchNorm0 = normLayer(sizeHidden)
+
+		self.conv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		self.batchNorm1 = normLayer(sizeHidden)
+
+
+	def getDimOutput(self):
+		return self.conv0.out_channels
+
+	def forward(self, x):
+		x = F.relu(self.batchNorm0(self.conv0(x)))
+		x = F.relu(self.batchNorm1(self.conv1(x)))
+		return x
+
+class CTCCharacterCriterion(torch.nn.Module):
+
+	def __init__(self, dimEncoder, nPhones, LSTM=False, sizeKernel=8,
+				 seqNorm=False, dropout=False, reduction='mean'):
+
+		super(CTCCharacterCriterion, self).__init__()
+		self.seqNorm = seqNorm
+		self.epsilon = 1e-8
+		self.dropout = torch.nn.Dropout2d(
+			p=0.5, inplace=False) if dropout else None
+		self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder,
+								   num_layers=1, batch_first=True)
+		self.PhoneCriterionClassifier = torch.nn.Conv1d(
+			dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
+		self.lossCriterion = torch.nn.CTCLoss(blank=nPhones,
+											  reduction=reduction,
+											  zero_infinity=True)
+		self.BLANK_LABEL = nPhones
+		self.useLSTM = LSTM
+
+	def getPrediction(self, cFeature):
+		B, S, H = cFeature.size()
+		if self.seqNorm:
+			m = cFeature.mean(dim=1, keepdim=True)
+			v = cFeature.var(dim=1, keepdim=True)
+			cFeature = (cFeature - m) / torch.sqrt(v + self.epsilon)
+		if self.useLSTM:
+			cFeature = self.conv1(cFeature)[0]
+
+		cFeature = cFeature.permute(0, 2, 1)
+
+		if self.dropout is not None:
+			cFeature = self.dropout(cFeature)
+
+		return self.PhoneCriterionClassifier(cFeature).permute(0, 2, 1)
+
+	def forward(self, cFeature, featureSize, label, labelSize):
+
+		# cFeature.size() : batchSize x seq Size x hidden size
+		B, S, H = cFeature.size()
+		predictions = self.getPrediction(cFeature)
+		featureSize //= 4
+		predictions = cutData(predictions, featureSize)
+		featureSize = torch.clamp(featureSize, max=predictions.size(1))
+		label = cutData(label, labelSize)
+		if labelSize.min() <= 0:
+			print(label, labelSize)
+		predictions = torch.nn.functional.log_softmax(predictions, dim=2)
+		predictions = predictions.permute(1, 0, 2)
+		loss = self.lossCriterion(predictions, label,
+								  featureSize, labelSize).view(1, -1)
+
+		if torch.isinf(loss).sum() > 0 or torch.isnan(loss).sum() > 0:
+			loss = 0
+
+		return loss
