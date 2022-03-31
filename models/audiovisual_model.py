@@ -65,37 +65,6 @@ class ShiftedConv(nn.Module):
 		x = x.permute(0, 2, 1)
 		return x
 
-class CPCAudioVisualAR(nn.Module):
-
-	def __init__(self,
-				 dimEncoded,
-				 dimOutput,
-				 keepHidden,
-				 nLevelsGRU):
-
-		super(CPCAudioVisualAR, self).__init__()
-		self.baseNet = nn.LSTM(dimEncoded, dimOutput,
-							   num_layers=nLevelsGRU, batch_first=True)
-		self.hidden = None
-		self.keepHidden = keepHidden
-
-	def getDimOutput(self):
-		return self.baseNet.hidden_size
-
-	def forward(self, x):
-
-		try:
-			self.baseNet.flatten_parameters()
-		except RuntimeError:
-			pass
-		x, h = self.baseNet(x, self.hidden)
-		if self.keepHidden:
-			if isinstance(h, tuple):
-				self.hidden = tuple(x.detach() for x in h)
-			else:
-				self.hidden = h.detach()
-		return x
-
 
 class CPCAudioVisualModel(nn.Module):
 
@@ -732,3 +701,34 @@ class CTCCharacterCriterion(torch.nn.Module):
 			loss = 0
 
 		return loss
+
+class CPCAudioVisualAR(nn.Module):
+
+	def __init__(self,
+				 dimEncoded,
+				 dimOutput,
+				 keepHidden,
+				 nLevelsGRU):
+
+		super(CPCAudioVisualAR, self).__init__()
+		self.baseNet = nn.LSTM(dimEncoded, dimOutput,
+							   num_layers=nLevelsGRU, batch_first=True)
+		self.hidden = None
+		self.keepHidden = keepHidden
+
+	def getDimOutput(self):
+		return self.baseNet.hidden_size
+
+	def forward(self, x):
+
+		try:
+			self.baseNet.flatten_parameters()
+		except RuntimeError:
+			pass
+		x, h = self.baseNet(x, self.hidden)
+		if self.keepHidden:
+			if isinstance(h, tuple):
+				self.hidden = tuple(x.detach() for x in h)
+			else:
+				self.hidden = h.detach()
+		return x
