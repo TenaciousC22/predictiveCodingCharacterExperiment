@@ -514,11 +514,15 @@ class CPCCharacterClassifier(pl.LightningModule):
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
 		#Freeze base model
-		# if freeze:
-		# 	self.cpc_model.eval()
+		if freeze:
+			self.baseAudioNet.eval()
+			self.baseVideoNet.eval()
 
-		# 	for g in self.cpc_model.parameters():
-		# 		g.requires_grad = False
+			for g in self.baseAudioNet.parameters():
+				g.requires_grad = False
+
+			for g in self.baseVideoNet.parameters():
+				g.requires_grad = False
 
 	def baseAudio(self, sizeHidden=256):
 		normLayer = ChannelNorm
