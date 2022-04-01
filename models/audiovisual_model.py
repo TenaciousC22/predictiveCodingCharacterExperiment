@@ -5,6 +5,7 @@ import torchaudio
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
+import math
 ##############################################################################
 # Minimal code to load a CPC checkpoint
 ##############################################################################
