@@ -466,77 +466,6 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
 		return optimizer
 
-class CPCBaseNetwork(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super(CPCBaseNetwork, self).__init__()
-		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
-		self.dim_size = dim_size
-		self.batch_size = batch_size
-		self.DOWNSAMPLING = 160
-		normLayer = ChannelNorm
-		self.sizeHidden = dim_size
-
-		#Declare audio base network (basically just copied from CPCAudioEncoder)
-		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
-		self.audioBatchNorm0 = normLayer(sizeHidden)
-		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
-		self.audioBatchNorm1 = normLayer(sizeHidden)
-		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm2 = normLayer(sizeHidden)
-		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm3 = normLayer(sizeHidden)
-		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm4 = normLayer(sizeHidden)
-
-		#Declare video base network (basically just copied from CPCVideoEncoder)
-		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
-		self.videoBatchNorm0 = normLayer(sizeHidden)
-		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
-		self.videoBatchNorm1 = normLayer(sizeHidden)
-
-		return
-
-
-class CPCCharacterClassifier(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super(CPCCharacterClassifier, self).__init__()
-		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
-		self.dim_size = dim_size
-		self.batch_size = batch_size
-		self.DOWNSAMPLING = 160
-		normLayer = ChannelNorm
-		self.sizeHidden = dim_size
-
-		#Initialize base network
-		self.baseNet=CPCBaseNetwork()
-
-		#Declare remaining network
-		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
-		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
-		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
-		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
-
-
-		#Load checkpoints
-		if src_checkpoint_path is not None:
-			checkpoint = torch.load(src_checkpoint_path)
-			self.load_state_dict(checkpoint['state_dict'], strict=False)
-
-		#Freeze base model
-		if freeze:
-			self.baseNet.eval()
-
-			for g in self.baseNet.parameters():
-				g.requires_grad = False
-
-		return
-
 class ChannelNorm(nn.Module):
 
 	def __init__(self,
@@ -702,39 +631,31 @@ class CPCVisualEncoder(nn.Module):
 
 class CPCAudioVisualAR(nn.Module):
 
-	def __init__(self, dim=256, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256, fcHiddenSize=2048, dropout=0.1, numClasses=38):
+	def __init__(self, dimEncoded, dimOutput, keepHidden, nLevelsGRU):
 
 		super(CPCAudioVisualAR, self).__init__()
-		self.audioConv = nn.Conv1d(inSize, dim, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim, maxLen=peMaxLen)
-		encoderLayer = nn.TransformerEncoderLayer(d_model=dim, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
-		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.jointConv = nn.Conv1d(2*dim, dim, kernel_size=1, stride=1, padding=0)
-		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.outputConv = nn.Conv1d(dim, numClasses, kernel_size=1, stride=1, padding=0)
-	# 	self.baseNet = nn.LSTM(dimEncoded, dimOutput, num_layers=nLevelsGRU, batch_first=True)
-	# 	self.hidden = None
-	# 	self.keepHidden = keepHidden
+		self.baseNet = nn.LSTM(dimEncoded, dimOutput, num_layers=nLevelsGRU, batch_first=True)
+		self.hidden = None
+		self.keepHidden = keepHidden
 
 	#Gets DIM output? not sure why this exists
-	# def getDimOutput(self):
-	# 	return self.baseNet.hidden_size
+	def getDimOutput(self):
+		return self.baseNet.hidden_size
 
 	#Feed forward function
-	# def forward(self, x):
+	def forward(self, x):
 
-	# 	try:
-	# 		self.baseNet.flatten_parameters()
-	# 	except RuntimeError:
-	# 		pass
-	# 	x, h = self.baseNet(x, self.hidden)
-	# 	if self.keepHidden:
-	# 		if isinstance(h, tuple):
-	# 			self.hidden = tuple(x.detach() for x in h)
-	# 		else:
-	# 			self.hidden = h.detach()
-	# 	return x
+		try:
+			self.baseNet.flatten_parameters()
+		except RuntimeError:
+			pass
+		x, h = self.baseNet(x, self.hidden)
+		if self.keepHidden:
+			if isinstance(h, tuple):
+				self.hidden = tuple(x.detach() for x in h)
+			else:
+				self.hidden = h.detach()
+		return x
 
 class CPCAudioVisualModel(nn.Module):
 
