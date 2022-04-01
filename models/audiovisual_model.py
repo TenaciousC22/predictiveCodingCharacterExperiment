@@ -478,16 +478,17 @@ class CPCCharacterClassifier(pl.LightningModule):
 		self.sizeHidden = dim_size
 
 		#Declare audio base network (basically just copied from CPCAudioEncoder)
-		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
-		self.audioBatchNorm0 = normLayer(sizeHidden)
-		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
-		self.audioBatchNorm1 = normLayer(sizeHidden)
-		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm2 = normLayer(sizeHidden)
-		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm3 = normLayer(sizeHidden)
-		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm4 = normLayer(sizeHidden)
+		self.baseAudioNet=self.baseAudio(dim_size)
+		# self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		# self.audioBatchNorm0 = normLayer(sizeHidden)
+		# self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		# self.audioBatchNorm1 = normLayer(sizeHidden)
+		# self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		# self.audioBatchNorm2 = normLayer(sizeHidden)
+		# self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		# self.audioBatchNorm3 = normLayer(sizeHidden)
+		# self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		# self.audioBatchNorm4 = normLayer(sizeHidden)
 
 		#Declare video base network (basically just copied from CPCVideoEncoder)
 		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
@@ -517,6 +518,18 @@ class CPCCharacterClassifier(pl.LightningModule):
 
 		# 	for g in self.cpc_model.parameters():
 		# 		g.requires_grad = False
+
+	def baseAudio(sizeHidden=256):
+		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		self.audioBatchNorm0 = normLayer(sizeHidden)
+		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		self.audioBatchNorm1 = normLayer(sizeHidden)
+		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm2 = normLayer(sizeHidden)
+		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm3 = normLayer(sizeHidden)
+		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm4 = normLayer(sizeHidden)
 
 class ChannelNorm(nn.Module):
 
