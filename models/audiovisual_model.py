@@ -466,7 +466,7 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 		return optimizer
 
 class CPCCharacterClassifier(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, visualFeatureDim=512, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
 		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
 		self.dim_size = dim_size
