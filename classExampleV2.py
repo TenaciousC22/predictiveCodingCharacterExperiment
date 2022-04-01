@@ -1,4 +1,4 @@
-class CPCCharacterClassifier(pl.LightningModule):
+class CPCCharacterClassifierV2(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, numLevelsGRU=1, peMaxLen=2500, inSize=256,
 			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super(CPCCharacterClassifier, self).__init__()
