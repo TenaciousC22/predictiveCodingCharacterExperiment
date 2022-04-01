@@ -468,7 +468,7 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 
 class CPCCharacterClassifier(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
-	fcHiddenSize=2048, dropout=0.1, numclasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
+	fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
 		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
 		self.dim_size = dim_size
@@ -683,7 +683,7 @@ class CPCVisualEncoder(nn.Module):
 
 class CPCAudioVisualAR(nn.Module):
 
-	def __init__(self, dim=256, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256, fcHiddenSize=2048, dropout=0.1, numclasses=38):
+	def __init__(self, dim=256, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256, fcHiddenSize=2048, dropout=0.1, numClasses=38):
 
 		super(CPCAudioVisualAR, self).__init__()
 		self.audioConv = nn.Conv1d(inSize, dim, kernel_size=4, stride=4, padding=0)
