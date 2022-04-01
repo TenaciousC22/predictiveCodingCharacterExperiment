@@ -545,6 +545,8 @@ class CPCCharacterClassifier(pl.LightningModule):
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
+		print(self.baseNet.parameters())
+
 		#Freeze base model
 		if freeze:
 			self.baseNet.eval()
