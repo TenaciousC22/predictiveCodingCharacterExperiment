@@ -509,7 +509,7 @@ class CPCCharacterClassifier(pl.LightningModule):
 		normLayer = ChannelNorm
 		self.sizeHidden = dim_size
 
-		self.baseNet=CPCBaseNetwork
+		self.baseNet=CPCBaseNetwork()
 
 		#Declare audio base network (basically just copied from CPCAudioEncoder)
 		# self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
@@ -545,14 +545,12 @@ class CPCCharacterClassifier(pl.LightningModule):
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
-		print(self.baseNet)
-
 		#Freeze base model
-		# if freeze:
-		# 	self.baseNet.eval()
+		if freeze:
+			self.baseNet.eval()
 
-		# 	for g in self.baseNet.parameters():
-		# 		g.requires_grad = False
+			for g in self.baseNet.parameters():
+				g.requires_grad = False
 
 		return
 
