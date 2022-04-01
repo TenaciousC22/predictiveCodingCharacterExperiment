@@ -467,7 +467,7 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 		return optimizer
 
 class CPCCharacterClassifier(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, numLevelsGRU=1, peMaxLen=2500, inSize=256,
+	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
 			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super(CPCCharacterClassifier, self).__init__()
 		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
@@ -476,50 +476,21 @@ class CPCCharacterClassifier(pl.LightningModule):
 		self.DOWNSAMPLING = 160
 		normLayer = ChannelNorm
 		self.sizeHidden = dim_size
-		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
 
-		#Initialize base audio network
-		self.baseAudioNet = nn.Sequential(nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU())
+		#Initialize base network
+		self.baseNet=CPCBaseNetwork()
 
-		#Initialize base video network
-		self.baseVideoNet = nn.Sequential(nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4),
-			normLayer(sizeHidden),
-			nn.ReLU())
-
-		#Intialize the LTSM for predictive coding
-		self.AR = nn.LSTM(dim_size, dim_size, num_layers=numLevelsGRU, batch_first=True)
-
-		#Declare remaining pre-join network
+		#Declare remaining network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
 		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
+		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
 		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
 		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
+		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
 
-		#Declare joint layers
-		self.jointNet = nn.Sequential(nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0),
-			nn.TransformerEncoder(encoderLayer, num_layers=numLayers),
-			nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0))
-
-		self.cached = cached
-
-		for g in self.AR.parameters():
+		for g in self.baseNet.parameters():
 			print(g)
 
 		#Load checkpoints
@@ -529,19 +500,42 @@ class CPCCharacterClassifier(pl.LightningModule):
 
 		#Freeze base model
 		if freeze:
-			self.baseAudioNet.eval()
-			self.baseVideoNet.eval()
-			self.AR.eval()
+			self.baseNet.eval()
 
-			for g in self.baseAudioNet.parameters():
-				g.requires_grad = False
-
-			for g in self.baseVideoNet.parameters():
-				g.requires_grad = False
-
-			for g in self.AR.parameters():
+			for g in self.baseNet.parameters():
 				g.requires_grad = False
 				print(g)
+
+		return
+
+class CPCBaseNetwork(pl.LightningModule):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
+			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
+		super(CPCBaseNetwork, self).__init__()
+		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
+		self.dim_size = dim_size
+		self.batch_size = batch_size
+		self.DOWNSAMPLING = 160
+		normLayer = ChannelNorm
+		self.sizeHidden = dim_size
+
+		#Declare audio base network (basically just copied from CPCAudioEncoder)
+		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		self.audioBatchNorm0 = normLayer(sizeHidden)
+		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		self.audioBatchNorm1 = normLayer(sizeHidden)
+		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm2 = normLayer(sizeHidden)
+		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm3 = normLayer(sizeHidden)
+		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm4 = normLayer(sizeHidden)
+
+		#Declare video base network (basically just copied from CPCVideoEncoder)
+		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		self.videoBatchNorm0 = normLayer(sizeHidden)
+		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		self.videoBatchNorm1 = normLayer(sizeHidden)
 
 		return
 
