@@ -466,7 +466,8 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 		return optimizer
 
 class CPCCharacterClassifier(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
+	fcHiddenSize=2048, dropout=0.1, numclasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
 		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
 		self.dim_size = dim_size
@@ -492,6 +493,16 @@ class CPCCharacterClassifier(pl.LightningModule):
 		self.videoBatchNorm0 = normLayer(sizeHidden)
 		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
 		self.videoBatchNorm1 = normLayer(sizeHidden)
+
+		#Declare remaining network
+		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
+		self.positionalEncoding = PositionalEncoding(dModel=dim_size_size, maxLen=peMaxLen)
+		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
+		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
+		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
 
 
 		#Load checkpoints
