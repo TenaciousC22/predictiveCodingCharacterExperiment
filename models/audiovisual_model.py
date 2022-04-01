@@ -548,11 +548,11 @@ class CPCCharacterClassifier(pl.LightningModule):
 		print(self.baseNet)
 
 		#Freeze base model
-		if freeze:
-			self.baseNet.eval()
+		# if freeze:
+		# 	self.baseNet.eval()
 
-			for g in self.baseNet.parameters():
-				g.requires_grad = False
+		# 	for g in self.baseNet.parameters():
+		# 		g.requires_grad = False
 
 		return
 
