@@ -675,13 +675,13 @@ class CPCAudioVisualAR(nn.Module):
 
 		super(CPCAudioVisualAR, self).__init__()
 		self.audioConv = nn.Conv1d(inSize, dim, kernel_size=4, stride=4, padding=0)
-        self.positionalEncoding = PositionalEncoding(dModel=dim, maxLen=peMaxLen)
+		self.positionalEncoding = PositionalEncoding(dModel=dim, maxLen=peMaxLen)
 		encoderLayer = nn.TransformerEncoderLayer(d_model=dim, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
 		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-        self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-        self.jointConv = nn.Conv1d(2*dim, dim, kernel_size=1, stride=1, padding=0)
-        self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-        self.outputConv = nn.Conv1d(dim, numClasses, kernel_size=1, stride=1, padding=0)
+		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.jointConv = nn.Conv1d(2*dim, dim, kernel_size=1, stride=1, padding=0)
+		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.outputConv = nn.Conv1d(dim, numClasses, kernel_size=1, stride=1, padding=0)
 	# 	self.baseNet = nn.LSTM(dimEncoded, dimOutput, num_layers=nLevelsGRU, batch_first=True)
 	# 	self.hidden = None
 	# 	self.keepHidden = keepHidden
@@ -797,24 +797,24 @@ class CTCCharacterCriterion(torch.nn.Module):
 
 class PositionalEncoding(nn.Module):
 
-    """
-    A layer to add positional encodings to the inputs of a Transformer model.
-    Formula:
-    PE(pos,2i) = sin(pos/10000^(2i/d_model))
-    PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
-    """
+	"""
+	A layer to add positional encodings to the inputs of a Transformer model.
+	Formula:
+	PE(pos,2i) = sin(pos/10000^(2i/d_model))
+	PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
+	"""
 
-    def __init__(self, dModel, maxLen):
-        super(PositionalEncoding, self).__init__()
-        pe = torch.zeros(maxLen, dModel)
-        position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
-        denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
-        pe[:, 0::2] = torch.sin(position/denominator)
-        pe[:, 1::2] = torch.cos(position/denominator)
-        pe = pe.unsqueeze(dim=0).transpose(0, 1)
-        self.register_buffer("pe", pe)
+	def __init__(self, dModel, maxLen):
+		super(PositionalEncoding, self).__init__()
+		pe = torch.zeros(maxLen, dModel)
+		position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
+		denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
+		pe[:, 0::2] = torch.sin(position/denominator)
+		pe[:, 1::2] = torch.cos(position/denominator)
+		pe = pe.unsqueeze(dim=0).transpose(0, 1)
+		self.register_buffer("pe", pe)
 
 
-    def forward(self, inputBatch):
-        outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
-        return outputBatch
+	def forward(self, inputBatch):
+		outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
+		return outputBatch
