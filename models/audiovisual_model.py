@@ -491,10 +491,11 @@ class CPCCharacterClassifier(pl.LightningModule):
 		# self.audioBatchNorm4 = normLayer(sizeHidden)
 
 		#Declare video base network (basically just copied from CPCVideoEncoder)
-		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
-		self.videoBatchNorm0 = normLayer(sizeHidden)
-		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
-		self.videoBatchNorm1 = normLayer(sizeHidden)
+		self.baseVideoNet=self.baseVideo(sizeHidden=dim_size, visualFeatureDim=visualFeatureDim)
+		# self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		# self.videoBatchNorm0 = normLayer(sizeHidden)
+		# self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		# self.videoBatchNorm1 = normLayer(sizeHidden)
 
 		#Declare remaining network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
@@ -519,7 +520,7 @@ class CPCCharacterClassifier(pl.LightningModule):
 		# 	for g in self.cpc_model.parameters():
 		# 		g.requires_grad = False
 
-	def baseAudio(self,sizeHidden=256):
+	def baseAudio(self, sizeHidden=256):
 		normLayer = ChannelNorm
 		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
 		self.audioBatchNorm0 = normLayer(sizeHidden)
@@ -531,6 +532,12 @@ class CPCCharacterClassifier(pl.LightningModule):
 		self.audioBatchNorm3 = normLayer(sizeHidden)
 		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
 		self.audioBatchNorm4 = normLayer(sizeHidden)
+
+	def baseVideo(self, sizeHidden=256, visualFeatureDim=512):
+		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		self.videoBatchNorm0 = normLayer(sizeHidden)
+		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		self.videoBatchNorm1 = normLayer(sizeHidden)
 
 class ChannelNorm(nn.Module):
 
