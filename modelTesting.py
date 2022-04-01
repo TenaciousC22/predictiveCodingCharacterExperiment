@@ -32,4 +32,4 @@ test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
 test_set = LRS2AudioVisualCachedCharacterDataset(test_ids, lrs2_path, val_params['batch_size'])
 test_generator = data.DataLoader(test_set, collate_fn=audiovisual_embedding_batch_collate, **val_params)
 
-network = CPCCharacterClassifierV2(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True) 
+network = CPCCharacterClassifier(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True) 
