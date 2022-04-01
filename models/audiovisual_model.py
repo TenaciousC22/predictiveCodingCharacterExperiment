@@ -520,6 +520,7 @@ class CPCCharacterClassifier(pl.LightningModule):
 		# 		g.requires_grad = False
 
 	def baseAudio(self,sizeHidden=256):
+		normLayer = ChannelNorm
 		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
 		self.audioBatchNorm0 = normLayer(sizeHidden)
 		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
