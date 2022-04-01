@@ -534,6 +534,7 @@ class CPCCharacterClassifier(pl.LightningModule):
 		self.audioBatchNorm4 = normLayer(sizeHidden)
 
 	def baseVideo(self, sizeHidden=256, visualFeatureDim=512):
+		normLayer = ChannelNorm
 		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
 		self.videoBatchNorm0 = normLayer(sizeHidden)
 		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
