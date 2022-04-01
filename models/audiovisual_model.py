@@ -520,6 +520,12 @@ class CPCCharacterClassifierV2(pl.LightningModule):
 
 		self.cached = cached
 
+		for g in self.baseVideoNet.parameters():
+			print(g)
+
+		for x in range(10):
+			print("")
+
 		#Load checkpoints
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
@@ -536,6 +542,7 @@ class CPCCharacterClassifierV2(pl.LightningModule):
 
 			for g in self.baseVideoNet.parameters():
 				g.requires_grad = False
+				print(g)
 
 			for g in self.AR.parameters():
 				g.requires_grad = False
@@ -569,6 +576,9 @@ class CPCCharacterClassifier(pl.LightningModule):
 		for g in self.baseNet.parameters():
 			print(g)
 
+		for x in range(10):
+			print("")
+
 		#Load checkpoints
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
@@ -581,37 +591,6 @@ class CPCCharacterClassifier(pl.LightningModule):
 			for g in self.baseNet.parameters():
 				g.requires_grad = False
 				print(g)
-
-		return
-
-class CPCBaseNetwork(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super(CPCBaseNetwork, self).__init__()
-		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
-		self.dim_size = dim_size
-		self.batch_size = batch_size
-		self.DOWNSAMPLING = 160
-		normLayer = ChannelNorm
-		self.sizeHidden = dim_size
-
-		#Declare audio base network (basically just copied from CPCAudioEncoder)
-		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
-		self.audioBatchNorm0 = normLayer(sizeHidden)
-		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
-		self.audioBatchNorm1 = normLayer(sizeHidden)
-		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm2 = normLayer(sizeHidden)
-		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm3 = normLayer(sizeHidden)
-		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
-		self.audioBatchNorm4 = normLayer(sizeHidden)
-
-		#Declare video base network (basically just copied from CPCVideoEncoder)
-		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
-		self.videoBatchNorm0 = normLayer(sizeHidden)
-		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
-		self.videoBatchNorm1 = normLayer(sizeHidden)
 
 		return
 
@@ -637,6 +616,9 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 
 		for g in self.cpc_model.parameters():
 			print(g)
+
+		for x in range(10):
+			print("")
 
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
@@ -923,3 +905,34 @@ class ChannelNorm(nn.Module):
 		if self.weight is not None:
 			x = x * self.weight + self.bias
 		return x
+
+class CPCBaseNetwork(pl.LightningModule):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
+			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
+		super(CPCBaseNetwork, self).__init__()
+		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
+		self.dim_size = dim_size
+		self.batch_size = batch_size
+		self.DOWNSAMPLING = 160
+		normLayer = ChannelNorm
+		self.sizeHidden = dim_size
+
+		#Declare audio base network (basically just copied from CPCAudioEncoder)
+		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		self.audioBatchNorm0 = normLayer(sizeHidden)
+		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		self.audioBatchNorm1 = normLayer(sizeHidden)
+		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm2 = normLayer(sizeHidden)
+		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm3 = normLayer(sizeHidden)
+		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm4 = normLayer(sizeHidden)
+
+		#Declare video base network (basically just copied from CPCVideoEncoder)
+		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		self.videoBatchNorm0 = normLayer(sizeHidden)
+		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		self.videoBatchNorm1 = normLayer(sizeHidden)
+
+		return
