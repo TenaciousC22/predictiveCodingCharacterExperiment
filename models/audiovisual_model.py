@@ -565,6 +565,9 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		#chaches information for fast retrieval
 		self.cached = cached
 
+		for g in self.cpc_model.parameters():
+			print(g)
+
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
@@ -574,6 +577,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 
 			for g in self.cpc_model.parameters():
 				g.requires_grad = False
+				print(g)
 
 
 	def training_step(self, x, batch_idx):
