@@ -509,7 +509,7 @@ class CPCCharacterClassifier(pl.LightningModule):
 		normLayer = ChannelNorm
 		self.sizeHidden = dim_size
 
-		baseNet=CPCBaseNetwork
+		self.baseNet=CPCBaseNetwork
 
 		#Declare audio base network (basically just copied from CPCAudioEncoder)
 		# self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
