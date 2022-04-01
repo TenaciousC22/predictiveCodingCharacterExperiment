@@ -496,7 +496,7 @@ class CPCCharacterClassifier(pl.LightningModule):
 
 		#Declare remaining network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim_size_size, maxLen=peMaxLen)
+		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
 		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
 		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
 		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
