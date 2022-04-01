@@ -11,40 +11,6 @@ import pytorch_lightning as pl
 from custom_layers import EqualizedConv1d
 from util.seq_alignment import collapseLabelChain
 
-class ChannelNorm(nn.Module):
-
-	def __init__(self,
-				 numFeatures,
-				 epsilon=1e-05,
-				 affine=True):
-
-		super(ChannelNorm, self).__init__()
-		if affine:
-			self.weight = nn.parameter.Parameter(torch.Tensor(1, numFeatures, 1))
-			self.bias = nn.parameter.Parameter(torch.Tensor(1, numFeatures, 1))
-		else:
-			self.weight = None
-			self.bias = None
-		self.epsilon = epsilon
-		self.p = 0
-		self.affine = affine
-		self.reset_parameters()
-
-	def reset_parameters(self):
-		if self.affine:
-			torch.nn.init.ones_(self.weight)
-			torch.nn.init.zeros_(self.bias)
-
-	def forward(self, x):
-
-		cumMean = x.mean(dim=1, keepdim=True)
-		cumVar = x.var(dim=1, keepdim=True)
-		x = (x - cumMean)*torch.rsqrt(cumVar + self.epsilon)
-
-		if self.weight is not None:
-			x = x * self.weight + self.bias
-		return x
-
 class ShiftedConv(nn.Module):
 	def __init__(self, dimOutputAR, dimOutputEncoder, kernelSize):
 		super(ShiftedConv, self).__init__()
@@ -65,47 +31,31 @@ class ShiftedConv(nn.Module):
 		x = x.permute(0, 2, 1)
 		return x
 
+class CPCAudioVisualAROld(nn.Module):
 
-class CPCAudioVisualModel(nn.Module):
+	def __init__(self, dimEncoded, dimOutput, keepHidden, nLevelsGRU):
 
-	def __init__(self,
-				 audioEncoder,
-				 visualEncoder,
-				 AR):
+		super(CPCAudioVisualAR, self).__init__()
+		self.baseNet = nn.LSTM(dimEncoded, dimOutput, num_layers=nLevelsGRU, batch_first=True)
+		self.hidden = None
+		self.keepHidden = keepHidden
 
-		super(CPCAudioVisualModel, self).__init__()
-		self.audioEncoder = audioEncoder
-		self.visualEncoder = visualEncoder
-		self.gAR = AR
-		self.conv0 = nn.Conv1d(self.audioEncoder.sizeHidden, self.audioEncoder.sizeHidden, 1)
+	def getDimOutput(self):
+		return self.baseNet.hidden_size
 
+	def forward(self, x):
 
-	def forward(self, batchData, label, padVideo=False, audioVisual=False):
-		audioData, visualData = batchData
-
-		#encode audio
-		encodedAudio = self.audioEncoder(audioData)
-
-		#encode video
-		encodedVideo = self.visualEncoder(visualData)
-
-		if padVideo:
-			encodedVideo = F.pad(encodedVideo, (0, encodedAudio.shape[2]-encodedVideo.shape[2]))
-
-		#merge encodings, conv, and permute
-		encodedAudioVisual = F.relu(self.conv0(encodedAudio+encodedVideo))
-		encodedAudioVisual = encodedAudioVisual.permute(0, 2, 1)
-
-		#permute audio only features
-		encodedAudio = encodedAudio.permute(0, 2, 1)
-
-		#run context AR network
-		cFeature = self.gAR(encodedAudioVisual)
-
-		if not audioVisual:
-			return cFeature, encodedAudio, label
-		else:
-			return cFeature, encodedAudioVisual, label
+		try:
+			self.baseNet.flatten_parameters()
+		except RuntimeError:
+			pass
+		x, h = self.baseNet(x, self.hidden)
+		if self.keepHidden:
+			if isinstance(h, tuple):
+				self.hidden = tuple(x.detach() for x in h)
+			else:
+				self.hidden = h.detach()
+		return x
 
 class AudioVisualPredictionNetwork(nn.Module):
 
@@ -515,20 +465,99 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
 		return optimizer
 
+class CPCCharacterClassifier(pl.LightningModule):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, visualFeatureDim=512, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+		super().__init__()
+		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
+		self.dim_size = dim_size
+		self.batch_size = batch_size
+		self.DOWNSAMPLING = 160
+		normLayer = ChannelNorm
+		self.sizeHidden = dim_size
+
+		#Declare audio base network (basically just copied from CPCAudioEncoder)
+		self.audioConv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		self.audioBatchNorm0 = normLayer(sizeHidden)
+		self.audioConv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		self.audioBatchNorm1 = normLayer(sizeHidden)
+		self.audioConv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm2 = normLayer(sizeHidden)
+		self.audioConv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm3 = normLayer(sizeHidden)
+		self.audioConv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.audioBatchNorm4 = normLayer(sizeHidden)
+
+		#Declare video base network (basically just copied from CPCVideoEncoder)
+		self.videoConv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		self.videoBatchNorm0 = normLayer(sizeHidden)
+		self.videoConv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		self.videoBatchNorm1 = normLayer(sizeHidden)
+
+
+		#Load checkpoints
+		if src_checkpoint_path is not None:
+			checkpoint = torch.load(src_checkpoint_path)
+			self.load_state_dict(checkpoint['state_dict'], strict=False)
+
+		#Freeze base model
+		if freeze:
+			self.cpc_model.eval()
+
+			for g in self.cpc_model.parameters():
+				g.requires_grad = False
+
+class ChannelNorm(nn.Module):
+
+	def __init__(self,
+				 numFeatures,
+				 epsilon=1e-05,
+				 affine=True):
+
+		super(ChannelNorm, self).__init__()
+		if affine:
+			self.weight = nn.parameter.Parameter(torch.Tensor(1, numFeatures, 1))
+			self.bias = nn.parameter.Parameter(torch.Tensor(1, numFeatures, 1))
+		else:
+			self.weight = None
+			self.bias = None
+		self.epsilon = epsilon
+		self.p = 0
+		self.affine = affine
+		self.reset_parameters()
+
+	def reset_parameters(self):
+		if self.affine:
+			torch.nn.init.ones_(self.weight)
+			torch.nn.init.zeros_(self.bias)
+
+	def forward(self, x):
+
+		cumMean = x.mean(dim=1, keepdim=True)
+		cumVar = x.var(dim=1, keepdim=True)
+		x = (x - cumMean)*torch.rsqrt(cumVar + self.epsilon)
+
+		if self.weight is not None:
+			x = x * self.weight + self.bias
+		return x
+
 class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
 		self.dim_size = dim_size
 		self.batch_size = batch_size
 
+		#Takes in raw audio/video and return 256 dim outputs
 		self.audio_encoder = CPCAudioEncoder(sizeHidden=dim_size)
 		self.visual_encoder = CPCVisualEncoder(sizeHidden=dim_size)
 
+		#Take audio and visual final DIMs and return [I need to edit this to add the transformers]
+		#Used to return a LSTM output
 		self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
+		#Applies final convolution
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
-
+		#Applies LSTM
 		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
-
+		#chaches information for fast retrieval
 		self.cached = cached
 
 		if src_checkpoint_path is not None:
@@ -569,10 +598,6 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		else:
 			cFeature = x
 
-		# mean = cFeature.mean(dim=1, keepdim=True)
-		# var = cFeature.var(dim=1, keepdim=True)
-		# cFeature = (cFeature - mean) / torch.sqrt(var + 1e-08)
-
 		allLosses = self.character_criterion(cFeature, x_len, label, label_len)
 
 		loss = allLosses.sum()
@@ -592,7 +617,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 class CPCAudioEncoder(nn.Module):
 
 	def __init__(self,
-				 sizeHidden=512):
+				 sizeHidden=256):
 
 		super(CPCAudioEncoder, self).__init__()
 		normLayer = ChannelNorm
@@ -601,8 +626,7 @@ class CPCAudioEncoder(nn.Module):
 		self.batchNorm0 = normLayer(sizeHidden)
 		self.conv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
 		self.batchNorm1 = normLayer(sizeHidden)
-		self.conv2 = nn.Conv1d(sizeHidden, sizeHidden, 4,
-							   stride=2, padding=1)
+		self.conv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
 		self.batchNorm2 = normLayer(sizeHidden)
 		self.conv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
 		self.batchNorm3 = normLayer(sizeHidden)
@@ -623,7 +647,7 @@ class CPCAudioEncoder(nn.Module):
 
 class CPCVisualEncoder(nn.Module):
 
-	def __init__(self, sizeHidden=512, inputSeqLen=32, visualFeatureDim=512):
+	def __init__(self, sizeHidden=256, inputSeqLen=32, visualFeatureDim=512):
 
 		super(CPCVisualEncoder, self).__init__()
 		normLayer = ChannelNorm
@@ -645,6 +669,80 @@ class CPCVisualEncoder(nn.Module):
 		x = F.relu(self.batchNorm1(self.conv1(x)))
 		return x
 
+class CPCAudioVisualAR(nn.Module):
+
+	def __init__(self, dim=256, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256, fcHiddenSize=2048, dropout=0.1, numclasses=38):
+
+		super(CPCAudioVisualAR, self).__init__()
+		self.audioConv = nn.Conv1d(inSize, dim, kernel_size=4, stride=4, padding=0)
+        self.positionalEncoding = PositionalEncoding(dModel=dim, maxLen=peMaxLen)
+		encoderLayer = nn.TransformerEncoderLayer(d_model=dim, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
+		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+        self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+        self.jointConv = nn.Conv1d(2*dim, dim, kernel_size=1, stride=1, padding=0)
+        self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+        self.outputConv = nn.Conv1d(dim, numClasses, kernel_size=1, stride=1, padding=0)
+	# 	self.baseNet = nn.LSTM(dimEncoded, dimOutput, num_layers=nLevelsGRU, batch_first=True)
+	# 	self.hidden = None
+	# 	self.keepHidden = keepHidden
+
+	#Gets DIM output? not sure why this exists
+	# def getDimOutput(self):
+	# 	return self.baseNet.hidden_size
+
+	#Feed forward function
+	# def forward(self, x):
+
+	# 	try:
+	# 		self.baseNet.flatten_parameters()
+	# 	except RuntimeError:
+	# 		pass
+	# 	x, h = self.baseNet(x, self.hidden)
+	# 	if self.keepHidden:
+	# 		if isinstance(h, tuple):
+	# 			self.hidden = tuple(x.detach() for x in h)
+	# 		else:
+	# 			self.hidden = h.detach()
+	# 	return x
+
+class CPCAudioVisualModel(nn.Module):
+
+	def __init__(self, audioEncoder, visualEncoder, AR):
+
+		super(CPCAudioVisualModel, self).__init__()
+		self.audioEncoder = audioEncoder
+		self.visualEncoder = visualEncoder
+		self.gAR = AR
+		self.conv0 = nn.Conv1d(self.audioEncoder.sizeHidden, self.audioEncoder.sizeHidden, 1)
+
+
+	def forward(self, batchData, label, padVideo=False, audioVisual=False):
+		audioData, visualData = batchData
+
+		#encode audio
+		encodedAudio = self.audioEncoder(audioData)
+
+		#encode video
+		encodedVideo = self.visualEncoder(visualData)
+
+		if padVideo:
+			encodedVideo = F.pad(encodedVideo, (0, encodedAudio.shape[2]-encodedVideo.shape[2]))
+
+		#merge encodings, conv, and permute
+		encodedAudioVisual = F.relu(self.conv0(encodedAudio+encodedVideo))
+		encodedAudioVisual = encodedAudioVisual.permute(0, 2, 1)
+
+		#permute audio only features
+		encodedAudio = encodedAudio.permute(0, 2, 1)
+
+		#run context AR network
+		cFeature = self.gAR(encodedAudioVisual)
+
+		if not audioVisual:
+			return cFeature, encodedAudio, label
+		else:
+			return cFeature, encodedAudioVisual, label
+
 class CTCCharacterCriterion(torch.nn.Module):
 
 	def __init__(self, dimEncoder, nPhones, LSTM=False, sizeKernel=8,
@@ -653,15 +751,10 @@ class CTCCharacterCriterion(torch.nn.Module):
 		super(CTCCharacterCriterion, self).__init__()
 		self.seqNorm = seqNorm
 		self.epsilon = 1e-8
-		self.dropout = torch.nn.Dropout2d(
-			p=0.5, inplace=False) if dropout else None
-		self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder,
-								   num_layers=1, batch_first=True)
-		self.PhoneCriterionClassifier = torch.nn.Conv1d(
-			dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
-		self.lossCriterion = torch.nn.CTCLoss(blank=nPhones,
-											  reduction=reduction,
-											  zero_infinity=True)
+		self.dropout = torch.nn.Dropout2d(p=0.5, inplace=False) if dropout else None
+		self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder, num_layers=1, batch_first=True)
+		self.PhoneCriterionClassifier = torch.nn.Conv1d(dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
+		self.lossCriterion = torch.nn.CTCLoss(blank=nPhones, reduction=reduction, zero_infinity=True)
 		self.BLANK_LABEL = nPhones
 		self.useLSTM = LSTM
 
@@ -702,33 +795,26 @@ class CTCCharacterCriterion(torch.nn.Module):
 
 		return loss
 
-class CPCAudioVisualAR(nn.Module):
+class PositionalEncoding(nn.Module):
 
-	def __init__(self,
-				 dimEncoded,
-				 dimOutput,
-				 keepHidden,
-				 nLevelsGRU):
+    """
+    A layer to add positional encodings to the inputs of a Transformer model.
+    Formula:
+    PE(pos,2i) = sin(pos/10000^(2i/d_model))
+    PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
+    """
 
-		super(CPCAudioVisualAR, self).__init__()
-		self.baseNet = nn.LSTM(dimEncoded, dimOutput,
-							   num_layers=nLevelsGRU, batch_first=True)
-		self.hidden = None
-		self.keepHidden = keepHidden
+    def __init__(self, dModel, maxLen):
+        super(PositionalEncoding, self).__init__()
+        pe = torch.zeros(maxLen, dModel)
+        position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
+        denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
+        pe[:, 0::2] = torch.sin(position/denominator)
+        pe[:, 1::2] = torch.cos(position/denominator)
+        pe = pe.unsqueeze(dim=0).transpose(0, 1)
+        self.register_buffer("pe", pe)
 
-	def getDimOutput(self):
-		return self.baseNet.hidden_size
 
-	def forward(self, x):
-
-		try:
-			self.baseNet.flatten_parameters()
-		except RuntimeError:
-			pass
-		x, h = self.baseNet(x, self.hidden)
-		if self.keepHidden:
-			if isinstance(h, tuple):
-				self.hidden = tuple(x.detach() for x in h)
-			else:
-				self.hidden = h.detach()
-		return x
+    def forward(self, inputBatch):
+        outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
+        return outputBatch
