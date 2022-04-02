@@ -22,13 +22,13 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		#Declare remaining pre-join network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
 		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
-		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.audioTransformer = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.videoTransformer = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
 
 		#Declare joint layers
-		self.jointNet = nn.Sequential(nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0),
-			nn.TransformerEncoder(encoderLayer, num_layers=numLayers),
-			nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0))
+		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
+		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
 
 		self.cached = cached
 
