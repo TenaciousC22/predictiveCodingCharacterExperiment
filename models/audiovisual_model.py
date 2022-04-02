@@ -709,7 +709,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		self.cached = cached
 
-		for g in self.audio_encoder.parameters():
+		for g in self.visual_encoder.parameters():
 			print(g)
 
 		for x in range(10):
@@ -725,10 +725,10 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 			for g in self.audio_encoder.parameters():
 				g.requires_grad = False
-				print(g)
 
 			for g in self.visual_encoder.parameters():
 				g.requires_grad = False
+				print(g)
 
 class CPCAudioEncoder(nn.Module):
 
