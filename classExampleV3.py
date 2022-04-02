@@ -1,6 +1,6 @@
 class CPCCharacterClassifierV3(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super().__init__()
+		super(CPCCharacterClassifierV3, self).__init__()
 		self.dim_size = dim_size
 		self.batch_size = batch_size
 

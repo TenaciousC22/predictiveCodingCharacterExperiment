@@ -6,7 +6,7 @@ from torch.utils import data
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from generators.librispeech import LRS2AudioVisualPhonemeDataset, LRS2UnsupervisedLoader, LRS2AudioVisualCachedCharacterDataset
-from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightning, CPCCharacterClassifier, CPCCharacterClassifierV2
+from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightning, CPCCharacterClassifier, CPCCharacterClassifierV2, CPCCharacterClassifierV3
 from util.pad import audiovisual_batch_collate, audiovisual_embedding_batch_collate
 
 params={'batch_size': 8,
