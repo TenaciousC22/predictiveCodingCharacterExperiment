@@ -30,11 +30,11 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		if freeze:
 			self.audio_encoder.eval()
-			self.video_encoder.eval()
+			self.visual_encoder.eval()
 
 			for g in self.audio_encoder.parameters():
 				g.requires_grad = False
 				print(g)
 
-			for g in self.video_encoder.parameters():
+			for g in self.visual_encoder.parameters():
 				g.requires_grad = False
