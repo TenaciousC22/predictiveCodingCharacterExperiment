@@ -467,6 +467,132 @@ class FBAudioVisualCPCPhonemeClassifierLightning(pl.LightningModule):
 
 		return optimizer
 
+class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+		super().__init__()
+		self.dim_size = dim_size
+		self.batch_size = batch_size
+
+		#Takes in raw audio/video and return 256 dim outputs
+		self.audio_encoder = CPCAudioEncoder(sizeHidden=dim_size)
+		self.visual_encoder = CPCVisualEncoder(sizeHidden=dim_size)
+
+		#Take audio and visual final DIMs and return [I need to edit this to add the transformers]
+		#Used to return a LSTM output
+		self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
+		#Applies final convolution
+		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
+		#Applies LSTM
+		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		#chaches information for fast retrieval
+		self.cached = cached
+
+		for g in self.cpc_model.parameters():
+			print(g)
+
+		for x in range(10):
+			print("")
+
+		if src_checkpoint_path is not None:
+			checkpoint = torch.load(src_checkpoint_path)
+			self.load_state_dict(checkpoint['state_dict'], strict=False)
+
+		if freeze:
+			self.cpc_model.eval()
+
+			for g in self.cpc_model.parameters():
+				g.requires_grad = False
+				print(g)
+
+
+	def training_step(self, x, batch_idx):
+		ctc_loss = self.shared_step(x, batch_idx)
+		self.log("train_loss", ctc_loss)
+
+		return ctc_loss
+
+	def validation_step(self, x, batch_idx):
+		ctc_loss = self.shared_step(x, batch_idx)
+		self.log("val_loss", ctc_loss)
+
+		return ctc_loss
+
+	def test_step(self, x, batch_idx):
+		ctc_loss = self.shared_step(x, batch_idx)
+		self.log("test_loss", ctc_loss)
+
+		return ctc_loss
+
+	def shared_step(self, data, batch_idx):
+		x, x_len, label, label_len = data
+
+		if not self.cached:
+			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True, audioVisual=True)
+			x_len //= 160
+		else:
+			cFeature = x
+
+		allLosses = self.character_criterion(cFeature, x_len, label, label_len)
+
+		loss = allLosses.sum()
+		return loss
+
+	def get_predictions(self, x):
+		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
+		predictions = torch.nn.functional.softmax(self.phoneme_criterion.getPrediction(cFeature), dim=2)
+
+		return predictions
+
+	def configure_optimizers(self):
+		g_params = list(self.phoneme_criterion.parameters())
+		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
+		return optimizer
+
+class CPCCharacterClassifier(pl.LightningModule):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
+			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
+		super(CPCCharacterClassifier, self).__init__()
+		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
+		self.dim_size = dim_size
+		self.batch_size = batch_size
+		self.DOWNSAMPLING = 160
+		normLayer = ChannelNorm
+		self.sizeHidden = dim_size
+
+		#Initialize base network
+		self.baseNet=CPCBaseNetwork()
+
+		#Declare remaining network
+		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
+		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
+		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
+		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
+		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
+
+		for g in self.baseNet.parameters():
+			print(g)
+
+		for x in range(10):
+			print("")
+
+		#Load checkpoints
+		if src_checkpoint_path is not None:
+			checkpoint = torch.load(src_checkpoint_path)
+			self.load_state_dict(checkpoint['state_dict'], strict=False)
+
+		#Freeze base model
+		if freeze:
+			self.baseNet.eval()
+
+			for g in self.baseNet.parameters():
+				g.requires_grad = False
+				print(g)
+
+		return
+
 class CPCCharacterClassifierV2(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, numLevelsGRU=1, peMaxLen=2500, inSize=256,
 			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
@@ -549,52 +675,7 @@ class CPCCharacterClassifierV2(pl.LightningModule):
 
 		return
 
-class CPCCharacterClassifier(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super(CPCCharacterClassifier, self).__init__()
-		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
-		self.dim_size = dim_size
-		self.batch_size = batch_size
-		self.DOWNSAMPLING = 160
-		normLayer = ChannelNorm
-		self.sizeHidden = dim_size
-
-		#Initialize base network
-		self.baseNet=CPCBaseNetwork()
-
-		#Declare remaining network
-		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
-		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
-		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
-		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
-
-		for g in self.baseNet.parameters():
-			print(g)
-
-		for x in range(10):
-			print("")
-
-		#Load checkpoints
-		if src_checkpoint_path is not None:
-			checkpoint = torch.load(src_checkpoint_path)
-			self.load_state_dict(checkpoint['state_dict'], strict=False)
-
-		#Freeze base model
-		if freeze:
-			self.baseNet.eval()
-
-			for g in self.baseNet.parameters():
-				g.requires_grad = False
-				print(g)
-
-		return
-
-class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
+class CPCCharacterClassifierV3(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
 		self.dim_size = dim_size
@@ -610,7 +691,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		#Applies final convolution
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 		#Applies LSTM
-		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		#self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
 		#chaches information for fast retrieval
 		self.cached = cached
 
@@ -630,50 +711,6 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 			for g in self.cpc_model.parameters():
 				g.requires_grad = False
 				print(g)
-
-
-	def training_step(self, x, batch_idx):
-		ctc_loss = self.shared_step(x, batch_idx)
-		self.log("train_loss", ctc_loss)
-
-		return ctc_loss
-
-	def validation_step(self, x, batch_idx):
-		ctc_loss = self.shared_step(x, batch_idx)
-		self.log("val_loss", ctc_loss)
-
-		return ctc_loss
-
-	def test_step(self, x, batch_idx):
-		ctc_loss = self.shared_step(x, batch_idx)
-		self.log("test_loss", ctc_loss)
-
-		return ctc_loss
-
-	def shared_step(self, data, batch_idx):
-		x, x_len, label, label_len = data
-
-		if not self.cached:
-			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True, audioVisual=True)
-			x_len //= 160
-		else:
-			cFeature = x
-
-		allLosses = self.character_criterion(cFeature, x_len, label, label_len)
-
-		loss = allLosses.sum()
-		return loss
-
-	def get_predictions(self, x):
-		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
-		predictions = torch.nn.functional.softmax(self.phoneme_criterion.getPrediction(cFeature), dim=2)
-
-		return predictions
-
-	def configure_optimizers(self):
-		g_params = list(self.phoneme_criterion.parameters())
-		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
-		return optimizer
 
 class CPCAudioEncoder(nn.Module):
 

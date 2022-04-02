@@ -1,4 +1,5 @@
-def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+class CPCCharacterClassifierV3(pl.LightningModule):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
 		super().__init__()
 		self.dim_size = dim_size
 		self.batch_size = batch_size
@@ -13,7 +14,7 @@ def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder
 		#Applies final convolution
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 		#Applies LSTM
-		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		#self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
 		#chaches information for fast retrieval
 		self.cached = cached
 
