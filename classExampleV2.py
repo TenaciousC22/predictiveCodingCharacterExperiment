@@ -35,8 +35,8 @@ class CPCCharacterClassifierV2(pl.LightningModule):
 			normLayer(sizeHidden),
 			nn.ReLU())
 
-		#Intialize the LTSM for predictive coding
-		self.AR = nn.LSTM(dim_size, dim_size, num_layers=numLevelsGRU, batch_first=True)
+		#Intialize the LTSM for predictive coding (I don't think this is necessary)
+		#self.AR = nn.LSTM(dim_size, dim_size, num_layers=numLevelsGRU, batch_first=True)
 
 		#Declare remaining pre-join network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
