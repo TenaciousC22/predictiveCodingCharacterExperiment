@@ -706,7 +706,8 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
 		if freeze:
-			self.cpc_model.eval()
+			self.audio_encoder.eval()
+			self.video_encoder.eval()
 
 			for g in self.audio_encoder.parameters():
 				g.requires_grad = False
