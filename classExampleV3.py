@@ -10,15 +10,15 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		#Take audio and visual final DIMs and return [I need to edit this to add the transformers]
 		#Used to return a LSTM output
-		self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
-		#Applies final convolution
-		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
+		# self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
+		# #Applies final convolution
+		# self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 		#Applies LSTM
 		#self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
 		#chaches information for fast retrieval
 		self.cached = cached
 
-		for g in self.cpc_model.parameters():
+		for g in self.audio_encoder.parameters():
 			print(g)
 
 		for x in range(10):
@@ -31,6 +31,9 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		if freeze:
 			self.cpc_model.eval()
 
-			for g in self.cpc_model.parameters():
+			for g in self.audio_encoder.parameters():
 				g.requires_grad = False
 				print(g)
+
+			for g in self.video_encoder.parameters():
+				g.requires_grad = False
