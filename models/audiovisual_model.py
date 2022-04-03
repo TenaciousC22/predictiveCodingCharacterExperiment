@@ -483,7 +483,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		#Applies final convolution
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 		#Applies LSTM
-		self.character_criterion = CTCPhonemeCriterion(self.dim_size, 38, LSTM=LSTM)
+		self.phoneme_criterion = CTCPhoneCriterion(self.dim_size, 38, LSTM=LSTM)
 		#chaches information for fast retrieval
 		self.cached = cached
 
@@ -525,7 +525,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		else:
 			cFeature = x
 
-		allLosses = self.character_criterion(cFeature, x_len, label, label_len)
+		allLosses = self.phoneme_criterion(cFeature, x_len, label, label_len)
 
 		loss = allLosses.sum()
 		return loss
