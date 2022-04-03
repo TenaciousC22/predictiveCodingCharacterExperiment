@@ -483,15 +483,9 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		#Applies final convolution
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 		#Applies LSTM
-		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		self.character_criterion = CTCPhonemeCriterion(self.dim_size, 38, LSTM=LSTM)
 		#chaches information for fast retrieval
 		self.cached = cached
-
-		for g in self.cpc_model.parameters():
-			print(g)
-
-		for x in range(10):
-			print("")
 
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
@@ -502,7 +496,6 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 
 			for g in self.cpc_model.parameters():
 				g.requires_grad = False
-				print(g)
 
 
 	def training_step(self, x, batch_idx):
