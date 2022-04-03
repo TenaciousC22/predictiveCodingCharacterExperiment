@@ -538,7 +538,7 @@ class FBAudioVisualCPCCharacterClassifierLightning(pl.LightningModule):
 		return loss
 
 	def get_predictions(self, x):
-		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
+		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True, audioVisual=True)
 		predictions = torch.nn.functional.softmax(self.phoneme_criterion.getPrediction(cFeature), dim=2)
 
 		return predictions

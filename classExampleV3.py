@@ -7,23 +7,20 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
 
 		#Takes in raw audio/video and return 256 dim outputs
-		self.audio_encoder = CPCAudioEncoder(sizeHidden=dim_size)
-		self.visual_encoder = CPCVisualEncoder(sizeHidden=dim_size)
+		self.audioFront = CPCAudioEncoder(sizeHidden=dim_size)
+		self.visualFront = CPCVisualEncoder(sizeHidden=dim_size)
 
-		#Take audio and visual final DIMs and return [I need to edit this to add the transformers]
-		#Used to return a LSTM output
-		# self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
-		# #Applies final convolution
-		# self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
+		#Create Unified Model
+		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
+
 		#Applies LSTM
 		#self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
-		#chaches information for fast retrieval
 
 		#Declare remaining pre-join network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
 		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
-		self.audioTransformer = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoTransformer = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.audioEncoder= nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
+		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
 
 		#Declare joint layers
 		self.jointConv = nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0)
@@ -32,23 +29,97 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		self.cached = cached
 
-		for g in self.audio_encoder.parameters():
-			print(g)
-
-		for x in range(10):
-			print("")
-
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
 		if freeze:
-			self.audio_encoder.eval()
-			self.visual_encoder.eval()
+			self.audioFront.eval()
+			self.visualFront.eval()
 
-			for g in self.audio_encoder.parameters():
+			for g in self.audioFront.parameters():
 				g.requires_grad = False
-				print(g)
 
-			for g in self.visual_encoder.parameters():
+			for g in self.visualFront.parameters():
 				g.requires_grad = False
+
+	def training_step(self, x, batch_idx):
+		ctc_loss = self.shared_step(x, batch_idx)
+		self.log("train_loss", ctc_loss)
+
+		return ctc_loss
+
+	def validation_step(self, x, batch_idx):
+		ctc_loss = self.shared_step(x, batch_idx)
+		self.log("val_loss", ctc_loss)
+
+		return ctc_loss
+
+	def test_step(self, x, batch_idx):
+		ctc_loss = self.shared_step(x, batch_idx)
+		self.log("test_loss", ctc_loss)
+
+		return ctc_loss
+
+	def shared_step(self, data, batch_idx):
+		x, x_len, label, label_len = data
+
+		if not self.cached:
+			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True, audioVisual=True)
+			x_len //= 160
+		else:
+			cFeature = x
+
+		allLosses = self.character_criterion(cFeature, x_len, label, label_len)
+
+		loss = allLosses.sum()
+		return loss
+
+	def get_predictions(self, x):
+		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
+		predictions = torch.nn.functional.softmax(self.phoneme_criterion.getPrediction(cFeature), dim=2)
+
+		return predictions
+
+	def configure_optimizers(self):
+		g_params = list(self.phoneme_criterion.parameters())
+		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
+		return optimizer
+
+class CPCAudioVisualModelV2(nn.Module):
+
+	def __init__(self, audioEncoder, visualEncoder, AR):
+
+		super(CPCAudioVisualModel, self).__init__()
+		self.audioEncoder = audioEncoder
+		self.visualEncoder = visualEncoder
+		self.gAR = AR
+		self.conv0 = nn.Conv1d(self.audioEncoder.sizeHidden, self.audioEncoder.sizeHidden, 1)
+
+
+	def forward(self, batchData, label, padVideo=False, audioVisual=False):
+		audioData, visualData = batchData
+
+		#encode audio
+		encodedAudio = self.audioEncoder(audioData)
+
+		#encode video
+		encodedVideo = self.visualEncoder(visualData)
+
+		if padVideo:
+			encodedVideo = F.pad(encodedVideo, (0, encodedAudio.shape[2]-encodedVideo.shape[2]))
+
+		#merge encodings, conv, and permute
+		encodedAudioVisual = F.relu(self.conv0(encodedAudio+encodedVideo))
+		encodedAudioVisual = encodedAudioVisual.permute(0, 2, 1)
+
+		#permute audio only features
+		encodedAudio = encodedAudio.permute(0, 2, 1)
+
+		#run context AR network
+		cFeature = self.gAR(encodedAudioVisual)
+
+		if not audioVisual:
+			return cFeature, encodedAudio, label
+		else:
+			return cFeature, encodedAudioVisual, label

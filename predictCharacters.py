@@ -119,16 +119,16 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 
 		np.save(output_path,output_arr)
 
-		#predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
+		predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
 
-		# resultArr.append([])
-		# resultArr[-1].append(speakers[i])
-		# resultArr[-1].append(clips[i])
-		# resultArr[-1].append(offsetMap[i%16])
+		resultArr.append([])
+		resultArr[-1].append(speakers[i])
+		resultArr[-1].append(clips[i])
+		resultArr[-1].append(offsetMap[i%16])
 
-		# for x in predSeq:
-		# 	resultArr[-1].append(index2char[x])
+		for x in predSeq:
+			resultArr[-1].append(index2char[x])
 
-# with open(dest_csv,"w") as file:
-# 	writer=csv.writer(file,delimiter=',')
-# 	writer.writerows(resultArr)
+with open(dest_csv,"w") as file:
+	writer=csv.writer(file,delimiter=',')
+	writer.writerows(resultArr)
