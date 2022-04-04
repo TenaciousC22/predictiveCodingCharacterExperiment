@@ -340,7 +340,6 @@ class FBAudioVisualCPCLightning(pl.LightningModule):
 	def training_step(self, x, batch_idx):
 		nce_loss, nce_acc = self.shared_step(x, batch_idx)
 		self.log("train_loss", nce_loss)
-
 		return nce_loss
 
 
