@@ -207,3 +207,58 @@ class CTCCharacterCriterion(torch.nn.Module):
 			loss = 0
 
 		return loss
+
+class CPCAudioEncoder(nn.Module):
+
+	def __init__(self,
+				 sizeHidden=256):
+
+		super(CPCAudioEncoder, self).__init__()
+		normLayer = ChannelNorm
+		self.sizeHidden = sizeHidden
+		self.conv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
+		self.batchNorm0 = normLayer(sizeHidden)
+		self.conv1 = nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2)
+		self.batchNorm1 = normLayer(sizeHidden)
+		self.conv2 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.batchNorm2 = normLayer(sizeHidden)
+		self.conv3 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.batchNorm3 = normLayer(sizeHidden)
+		self.conv4 = nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1)
+		self.batchNorm4 = normLayer(sizeHidden)
+		self.DOWNSAMPLING = 160
+
+	def getDimOutput(self):
+		return self.conv4.out_channels
+
+	def forward(self, x):
+		x = F.relu(self.batchNorm0(self.conv0(x)))
+		x = F.relu(self.batchNorm1(self.conv1(x)))
+		x = F.relu(self.batchNorm2(self.conv2(x)))
+		x = F.relu(self.batchNorm3(self.conv3(x)))
+		x = F.relu(self.batchNorm4(self.conv4(x)))
+		return x
+
+class CPCVisualEncoder(nn.Module):
+
+	def __init__(self, sizeHidden=256, inputSeqLen=32, visualFeatureDim=512):
+
+		super(CPCVisualEncoder, self).__init__()
+		normLayer = ChannelNorm
+		self.inputSeqLen = inputSeqLen
+		self.sizeHidden = sizeHidden
+
+		self.conv0 = nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1)
+		self.batchNorm0 = normLayer(sizeHidden)
+
+		self.conv1 = nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4)
+		self.batchNorm1 = normLayer(sizeHidden)
+
+
+	def getDimOutput(self):
+		return self.conv0.out_channels
+
+	def forward(self, x):
+		x = F.relu(self.batchNorm0(self.conv0(x)))
+		x = F.relu(self.batchNorm1(self.conv1(x)))
+		return x
