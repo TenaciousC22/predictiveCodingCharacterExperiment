@@ -337,8 +337,6 @@ class FBAudioVisualCPCLightning(pl.LightningModule):
 		self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
 		self.cpc_criterion = CPCAudioVisualUnsupersivedCriterion(pred_steps, dim_size, dim_size, self.negative_samples, rnnMode=self.pred_rnn_mode)
 
-
-
 	def training_step(self, x, batch_idx):
 		nce_loss, nce_acc = self.shared_step(x, batch_idx)
 		self.log("train_loss", nce_loss)
