@@ -6,8 +6,8 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		self.batch_size = batch_size
 
 		#Takes in raw audio/video and return 256 dim outputs
-		self.audioFront = CPCAudioEncoder(sizeHidden=dim_size)
-		self.visualFront = CPCVisualEncoder(sizeHidden=dim_size)
+		self.audioFront = CPCAudioEncoderV2(sizeHidden=dim_size)
+		self.visualFront = CPCVisualEncoderV2(sizeHidden=dim_size)
 
 		self.ar = CPCAudioVisualARV2(dim_size, dim_size, False, 1)
 
@@ -55,7 +55,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		x, x_len, label, label_len = data
 
 		if not self.cached:
-			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True, audioVisual=True)
+			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True)
 			x_len //= 160
 		else:
 			cFeature = x
@@ -66,13 +66,13 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		return loss
 
 	def get_predictions(self, x):
-		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True, audioVisual=True)
-		predictions = torch.nn.functional.softmax(self.phoneme_criterion.getPrediction(cFeature), dim=2)
+		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
+		predictions = torch.nn.functional.softmax(self.character_criterion.getPrediction(cFeature), dim=2)
 
 		return predictions
 
 	def configure_optimizers(self):
-		g_params = list(self.phoneme_criterion.parameters())
+		g_params = list(self.character_criterion.parameters())
 		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
 		return optimizer
 
@@ -99,20 +99,10 @@ class CPCAudioVisualModelV2(nn.Module):
 		if padVideo:
 			encodedVideo = F.pad(encodedVideo, (0, encodedAudio.shape[2]-encodedVideo.shape[2]))
 
-		#merge encodings, conv, and permute
-		# encodedAudioVisual = F.relu(self.conv0(encodedAudio+encodedVideo))
-		# encodedAudioVisual = encodedAudioVisual.permute(0, 2, 1)
-
-		# #permute audio only features
-		# encodedAudio = encodedAudio.permute(0, 2, 1)
-
 		#run context AR network
-		cFeature = self.gAR(encodedAudioVisual)
+		cFeature = self.gAR(encodedAudio,encodedVideo)
 
-		# if not audioVisual:
-		# 	return cFeature, encodedAudio, label
-		# else:
-		# 	return cFeature, encodedAudioVisual, label
+		return cFeature, encodedAudioVisual, label
 
 class CPCAudioVisualARV2(nn.Module):
 
@@ -142,26 +132,37 @@ class CPCAudioVisualARV2(nn.Module):
 	# 	return self.baseNet.hidden_size
 
 	#Feed forward function
-	def forward(self, x):
+	def forward(self, encodedAudio, encodedVisual):
 
-		# try:
-		# 	self.baseNet.flatten_parameters()
-		# except RuntimeError:
-		# 	pass
-		# x, h = self.baseNet(x, self.hidden)
-		# if self.keepHidden:
-		# 	if isinstance(h, tuple):
-		# 		self.hidden = tuple(x.detach() for x in h)
-		# 	else:
-		# 		self.hidden = h.detach()
-		# return x
+		#Not sure if the transpose functions are necessary
+		encodedAudio = encodedAudio.transpose(0, 1).transpose(1, 2)
+		audioBatch = self.audioConv(encodedAudio)
+		audioBatch = audioBatch.transpose(1, 2).transpose(0, 1)
+		audioBatch = self.positionalEncoding(audioBatch)
+		audioBatch = self.audioEncoder(audioBatch)
 
-class CTCCharacterCriterion(torch.nn.Module):
+		videoBatch = self.positionalEncoding(encodedVideo)
+		videoBatch = self.videoEncoder(encodedVideo)
+
+		jointBatch = torch.cat([audioBatch, videoBatch], dim=2)
+		jointBatch = jointBatch.transpose(0, 1).transpose(1, 2)
+		jointBatch = self.jointConv(jointBatch)
+		jointBatch=jointBatch.transpose(1, 2).transpose(0, 1)
+
+		jointBatch = slef.jointDecoder(jointBatch)
+		jointBatch = jointBatch.transpose(0, 1).transpose(1, 2)
+        jointBatch = self.outputConv(jointBatch)
+        jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
+        outputBatch = F.log_softmax(jointBatch, dim=2)
+
+        return outputBatch
+
+class CTCCharacterCriterionV2(torch.nn.Module):
 
 	def __init__(self, dimEncoder, nPhones, LSTM=False, sizeKernel=8,
 				 seqNorm=False, dropout=False, reduction='mean'):
 
-		super(CTCCharacterCriterion, self).__init__()
+		super(CTCCharacterCriterionV2, self).__init__()
 		self.seqNorm = seqNorm
 		self.epsilon = 1e-8
 		self.dropout = torch.nn.Dropout2d(p=0.5, inplace=False) if dropout else None
@@ -208,12 +209,12 @@ class CTCCharacterCriterion(torch.nn.Module):
 
 		return loss
 
-class CPCAudioEncoder(nn.Module):
+class CPCAudioEncoderV2(nn.Module):
 
 	def __init__(self,
 				 sizeHidden=256):
 
-		super(CPCAudioEncoder, self).__init__()
+		super(CPCAudioEncoderV2, self).__init__()
 		normLayer = ChannelNorm
 		self.sizeHidden = sizeHidden
 		self.conv0 = nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3)
@@ -239,11 +240,11 @@ class CPCAudioEncoder(nn.Module):
 		x = F.relu(self.batchNorm4(self.conv4(x)))
 		return x
 
-class CPCVisualEncoder(nn.Module):
+class CPCVisualEncoderV2(nn.Module):
 
 	def __init__(self, sizeHidden=256, inputSeqLen=32, visualFeatureDim=512):
 
-		super(CPCVisualEncoder, self).__init__()
+		super(CPCVisualEncoderV2, self).__init__()
 		normLayer = ChannelNorm
 		self.inputSeqLen = inputSeqLen
 		self.sizeHidden = sizeHidden
