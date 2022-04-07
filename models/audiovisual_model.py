@@ -1102,7 +1102,7 @@ class CPCAudioVisualModelV2(nn.Module):
 
 class CPCAudioVisualARV2(nn.Module):
 
-	def __init__(self, inSize=256, dim_size=256, peMaxLen=2500, keepHidden=False, numHeads=8, numLayers=6, fcHiddenSize=2048, dropout=0.1, numClasses=39):
+	def __init__(self, inSize=256, dim_size=256, peMaxLen=2500, keepHidden=False, numHeads=8, numLayers=6, fcHiddenSize=2048, dropout=0.1, numClasses=39, cached=True):
 
 		super(CPCAudioVisualARV2, self).__init__()
 		#self.baseNet = nn.LSTM(dimEncoded, dimOutput, num_layers=nLevelsGRU, batch_first=True)
