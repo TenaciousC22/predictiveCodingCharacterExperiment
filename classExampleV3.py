@@ -66,7 +66,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		return loss
 
 	def get_predictions(self, x):
-		cFeature, encodedData, label = self.cpc_model(x, None, padVideo=True)
+		cFeature, decodedData, label = self.cpc_model(x, None, padVideo=True)
 		predictions = torch.nn.functional.softmax(self.character_criterion.getPrediction(cFeature), dim=2)
 
 		return predictions
@@ -100,9 +100,9 @@ class CPCAudioVisualModelV2(nn.Module):
 			encodedVideo = F.pad(encodedVideo, (0, encodedAudio.shape[2]-encodedVideo.shape[2]))
 
 		#run context AR network
-		cFeature = self.gAR(encodedAudio,encodedVideo)
+		jointDecoded = self.gAR(encodedAudio,encodedVideo)
 
-		return cFeature, encodedAudioVisual, label
+		return cFeature, jointDecoded, label
 
 class CPCAudioVisualARV2(nn.Module):
 
@@ -150,10 +150,10 @@ class CPCAudioVisualARV2(nn.Module):
 		jointBatch=jointBatch.transpose(1, 2).transpose(0, 1)
 
 		jointBatch = slef.jointDecoder(jointBatch)
-		jointBatch = jointBatch.transpose(0, 1).transpose(1, 2)
-        jointBatch = self.outputConv(jointBatch)
-        jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
-        outputBatch = F.log_softmax(jointBatch, dim=2)
+		output = jointBatch.transpose(0, 1).transpose(1, 2)
+        # jointBatch = self.outputConv(jointBatch)
+        # jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
+        # outputBatch = F.log_softmax(jointBatch, dim=2)
 
         return outputBatch
 
@@ -263,3 +263,27 @@ class CPCVisualEncoderV2(nn.Module):
 		x = F.relu(self.batchNorm0(self.conv0(x)))
 		x = F.relu(self.batchNorm1(self.conv1(x)))
 		return x
+
+class PositionalEncoding(nn.Module):
+
+    """
+    A layer to add positional encodings to the inputs of a Transformer model.
+    Formula:
+    PE(pos,2i) = sin(pos/10000^(2i/d_model))
+    PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
+    """
+
+    def __init__(self, dModel, maxLen):
+        super(PositionalEncoding, self).__init__()
+        pe = torch.zeros(maxLen, dModel)
+        position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
+        denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
+        pe[:, 0::2] = torch.sin(position/denominator)
+        pe[:, 1::2] = torch.cos(position/denominator)
+        pe = pe.unsqueeze(dim=0).transpose(0, 1)
+        self.register_buffer("pe", pe)
+
+
+    def forward(self, inputBatch):
+        outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
+        return outputBatch
