@@ -130,7 +130,6 @@ class AudioVisualPredictionNetwork(nn.Module):
 			out.append(outK)
 		return out
 
-
 class BaseCriterion(nn.Module):
 
 	def warmUp(self):
@@ -257,7 +256,6 @@ class CPCAudioVisualUnsupersivedCriterion(BaseCriterion):
 			outAcc[k] += torch.sum(predsIndex == labelLoss).float().view(1, -1)
 
 		return torch.cat(outLosses, dim=1), torch.cat(outAcc, dim=1) / (windowSize * batchSize)
-
 
 def cutData(seq, sizeSeq):
 	maxSeq = sizeSeq.max()

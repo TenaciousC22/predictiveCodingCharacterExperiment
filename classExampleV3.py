@@ -130,7 +130,7 @@ class CPCAudioVisualARV2(nn.Module):
 
 		#Declare remaining pre-join network
 		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
+		self.positionalEncoding = PositionalEncodingV2(dModel=dim_size, maxLen=peMaxLen)
 		self.audioEncoder= nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
 		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
 
@@ -278,7 +278,7 @@ class CPCVisualEncoderV2(nn.Module):
 		x = F.relu(self.batchNorm1(self.conv1(x)))
 		return x
 
-class PositionalEncoding(nn.Module):
+class PositionalEncodingV2(nn.Module):
 
     """
     A layer to add positional encodings to the inputs of a Transformer model.
