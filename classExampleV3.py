@@ -165,11 +165,11 @@ class CPCAudioVisualARV2(nn.Module):
 
 		jointBatch = slef.jointDecoder(jointBatch)
 		output = jointBatch.transpose(0, 1).transpose(1, 2)
-        # jointBatch = self.outputConv(jointBatch)
-        # jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
-        # outputBatch = F.log_softmax(jointBatch, dim=2)
+		# jointBatch = self.outputConv(jointBatch)
+		# jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
+		# outputBatch = F.log_softmax(jointBatch, dim=2)
 
-        return outputBatch
+		return outputBatch
 
 class CTCCharacterCriterionV2(torch.nn.Module):
 
@@ -280,24 +280,24 @@ class CPCVisualEncoderV2(nn.Module):
 
 class PositionalEncodingV2(nn.Module):
 
-    """
-    A layer to add positional encodings to the inputs of a Transformer model.
-    Formula:
-    PE(pos,2i) = sin(pos/10000^(2i/d_model))
-    PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
-    """
+	"""
+	A layer to add positional encodings to the inputs of a Transformer model.
+	Formula:
+	PE(pos,2i) = sin(pos/10000^(2i/d_model))
+	PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
+	"""
 
-    def __init__(self, dModel, maxLen):
-        super(PositionalEncoding, self).__init__()
-        pe = torch.zeros(maxLen, dModel)
-        position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
-        denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
-        pe[:, 0::2] = torch.sin(position/denominator)
-        pe[:, 1::2] = torch.cos(position/denominator)
-        pe = pe.unsqueeze(dim=0).transpose(0, 1)
-        self.register_buffer("pe", pe)
+	def __init__(self, dModel, maxLen):
+		super(PositionalEncoding, self).__init__()
+		pe = torch.zeros(maxLen, dModel)
+		position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
+		denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
+		pe[:, 0::2] = torch.sin(position/denominator)
+		pe[:, 1::2] = torch.cos(position/denominator)
+		pe = pe.unsqueeze(dim=0).transpose(0, 1)
+		self.register_buffer("pe", pe)
 
 
-    def forward(self, inputBatch):
-        outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
-        return outputBatch
+	def forward(self, inputBatch):
+		outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
+		return outputBatch
