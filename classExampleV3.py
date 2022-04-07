@@ -288,7 +288,7 @@ class PositionalEncodingV2(nn.Module):
 	"""
 
 	def __init__(self, dModel, maxLen):
-		super(PositionalEncoding, self).__init__()
+		super(PositionalEncodingV2, self).__init__()
 		pe = torch.zeros(maxLen, dModel)
 		position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
 		denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
