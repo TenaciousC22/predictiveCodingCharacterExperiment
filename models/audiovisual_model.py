@@ -1002,10 +1002,6 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		self.cached=cached
 
-		if src_checkpoint_path is not None:
-			checkpoint = torch.load(src_checkpoint_path)
-			self.load_state_dict(checkpoint['state_dict'], strict=False)
-
 		for g in self.audioFront.parameters():
 			print(g)
 
@@ -1015,6 +1011,10 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 			print(g)
 
 		time.sleep(2)
+
+		if src_checkpoint_path is not None:
+			checkpoint = torch.load(src_checkpoint_path)
+			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
 		if freeze:
 			self.audioFront.eval()
