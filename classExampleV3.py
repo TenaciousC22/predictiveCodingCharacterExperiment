@@ -9,7 +9,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		self.audioFront = CPCAudioEncoderV2(sizeHidden=dim_size)
 		self.visualFront = CPCVisualEncoderV2(sizeHidden=dim_size)
 
-		self.ar = CPCAudioVisualARV2(dim_size, dim_size, False, 1)
+		self.ar = CPCAudioVisualARV2(dim_size, dim_size, keepHidden=False)
 
 		#Create Unified Model
 		self.cpc_model = CPCAudioVisualModelV2(self.audioFront, self.visualFront, self.ar)
