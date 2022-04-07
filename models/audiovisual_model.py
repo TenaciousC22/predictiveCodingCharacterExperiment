@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 import math
+import time
 ##############################################################################
 # Minimal code to load a CPC checkpoint
 ##############################################################################
@@ -1008,12 +1009,12 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		for g in self.audioFront.parameters():
 			print(g)
 
-		sleep(2)
+		time.sleep(2)
 
 		for g in self.visualFront.parameters():
 			print(g)
 
-		sleep(2)
+		time.sleep(2)
 
 		if freeze:
 			self.audioFront.eval()
@@ -1023,7 +1024,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 				g.requires_grad = False
 				print(g)
 
-			sleep(2)
+			time.sleep(2)
 
 			for g in self.visualFront.parameters():
 				g.requires_grad = False
