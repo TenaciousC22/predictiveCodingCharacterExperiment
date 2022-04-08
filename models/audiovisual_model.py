@@ -582,143 +582,6 @@ class CPCCharacterClassifier(pl.LightningModule):
 
 		return
 
-class CPCCharacterClassifierV2(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, sizeHidden=256, visualFeatureDim=512, batch_size=8, numHeads=8, numLayers=6, numLevelsGRU=1, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super(CPCCharacterClassifierV2, self).__init__()
-		#Set some basic variables (Not sure if this is necessary given that I'm doing it all in one class)
-		self.dim_size = dim_size
-		self.batch_size = batch_size
-		self.DOWNSAMPLING = 160
-		normLayer = ChannelNorm
-		self.sizeHidden = dim_size
-		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
-
-		#Initialize base audio network
-		self.baseAudioNet = nn.Sequential(nn.Conv1d(1, sizeHidden, 10, stride=5, padding=3),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 8, stride=4, padding=2),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.Conv1d(sizeHidden, sizeHidden, 4, stride=2, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU())
-
-		#Initialize base video network
-		self.baseVideoNet = nn.Sequential(nn.Conv1d(visualFeatureDim, sizeHidden, kernel_size=3, padding=1),
-			normLayer(sizeHidden),
-			nn.ReLU(),
-			nn.ConvTranspose1d(sizeHidden, sizeHidden, kernel_size=4, stride=4),
-			normLayer(sizeHidden),
-			nn.ReLU())
-
-		#Intialize the LTSM for predictive coding
-		self.AR = nn.LSTM(dim_size, dim_size, num_layers=numLevelsGRU, batch_first=True)
-
-		#Declare remaining pre-join network
-		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
-		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-
-		#Declare joint layers
-		self.jointNet = nn.Sequential(nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0),
-			nn.TransformerEncoder(encoderLayer, num_layers=numLayers),
-			nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0))
-
-		self.cached = cached
-
-		for g in self.baseVideoNet.parameters():
-			print(g)
-
-		for x in range(10):
-			print("")
-
-		#Load checkpoints
-		if src_checkpoint_path is not None:
-			checkpoint = torch.load(src_checkpoint_path)
-			self.load_state_dict(checkpoint['state_dict'], strict=False)
-
-		#Freeze base model
-		if freeze:
-			self.baseAudioNet.eval()
-			self.baseVideoNet.eval()
-			self.AR.eval()
-
-			for g in self.baseAudioNet.parameters():
-				g.requires_grad = False
-
-			for g in self.baseVideoNet.parameters():
-				g.requires_grad = False
-				print(g)
-
-			for g in self.AR.parameters():
-				g.requires_grad = False
-
-		return
-
-class CPCCharacterClassifierV3(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, visualFeatureDim=512, numHeads=8, numLayers=6, numLevelsGRU=1, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", cached=True, LSTM=False, freeze=True):
-		super(CPCCharacterClassifierV3, self).__init__()
-		self.dim_size = dim_size
-		self.batch_size = batch_size
-		encoderLayer = nn.TransformerEncoderLayer(d_model=dim_size, nhead=numHeads, dim_feedforward=fcHiddenSize, dropout=dropout)
-
-		#Takes in raw audio/video and return 256 dim outputs
-		self.audio_encoder = CPCAudioEncoder(sizeHidden=dim_size)
-		self.visual_encoder = CPCVisualEncoder(sizeHidden=dim_size)
-
-		#Take audio and visual final DIMs and return [I need to edit this to add the transformers]
-		#Used to return a LSTM output
-		# self.ar = CPCAudioVisualAR(dim_size, dim_size, False, 1)
-		# #Applies final convolution
-		# self.cpc_model = CPCAudioVisualModel(self.audio_encoder, self.visual_encoder, self.ar)
-		#Applies LSTM
-		#self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
-		#chaches information for fast retrieval
-
-		#Declare remaining pre-join network
-		self.audioConv = nn.Conv1d(inSize, dim_size, kernel_size=4, stride=4, padding=0)
-		self.positionalEncoding = PositionalEncoding(dModel=dim_size, maxLen=peMaxLen)
-		self.audioEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		self.videoEncoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-
-		#Declare joint layers
-		self.jointNet = nn.Sequential(nn.Conv1d(2*dim_size, dim_size, kernel_size=1, stride=1, padding=0),
-			nn.TransformerEncoder(encoderLayer, num_layers=numLayers),
-			nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0))
-
-		self.cached = cached
-
-		for g in self.visual_encoder.parameters():
-			print(g)
-
-		for x in range(10):
-			print("")
-
-		if src_checkpoint_path is not None:
-			checkpoint = torch.load(src_checkpoint_path)
-			self.load_state_dict(checkpoint['state_dict'], strict=False)
-
-		if freeze:
-			self.audio_encoder.eval()
-			self.visual_encoder.eval()
-
-			for g in self.audio_encoder.parameters():
-				g.requires_grad = False
-
-			for g in self.visual_encoder.parameters():
-				g.requires_grad = False
-				print(g)
-
 class CPCAudioEncoder(nn.Module):
 
 	def __init__(self,
@@ -998,7 +861,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		self.cpc_model = CPCAudioVisualModelV2(self.audioFront, self.visualFront, self.ar)
 
 		#Applies LSTM
-		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		self.character_criterion = CTCCharacterCriterionV2(self.dim_size, 38, LSTM=LSTM)
 
 		self.cached=cached
 
@@ -1006,15 +869,29 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
+		for g in self.audioFront.parameters():
+			print(g)
+
+		sleep(2)
+
+		for g in self.visualFront.parameters():
+			print(g)
+
+		sleep(2)
+
 		if freeze:
 			self.audioFront.eval()
 			self.visualFront.eval()
 
 			for g in self.audioFront.parameters():
 				g.requires_grad = False
+				print(g)
+
+			sleep(2)
 
 			for g in self.visualFront.parameters():
 				g.requires_grad = False
+				print(g)
 
 	def training_step(self, x, batch_idx):
 		ctc_loss = self.shared_step(x, batch_idx)

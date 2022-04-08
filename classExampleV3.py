@@ -15,7 +15,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		self.cpc_model = CPCAudioVisualModelV2(self.audioFront, self.visualFront, self.ar)
 
 		#Applies LSTM
-		self.character_criterion = CTCCharacterCriterion(self.dim_size, 38, LSTM=LSTM)
+		self.character_criterion = CTCCharacterCriterionV2(self.dim_size, 38, LSTM=LSTM)
 
 		self.cached=cached
 
