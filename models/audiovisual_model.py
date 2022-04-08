@@ -869,29 +869,15 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
 
-		for g in self.audioFront.parameters():
-			print(g)
-
-		sleep(2)
-
-		for g in self.visualFront.parameters():
-			print(g)
-
-		sleep(2)
-
 		if freeze:
 			self.audioFront.eval()
 			self.visualFront.eval()
 
 			for g in self.audioFront.parameters():
 				g.requires_grad = False
-				print(g)
-
-			sleep(2)
 
 			for g in self.visualFront.parameters():
 				g.requires_grad = False
-				print(g)
 
 	def training_step(self, x, batch_idx):
 		ctc_loss = self.shared_step(x, batch_idx)
