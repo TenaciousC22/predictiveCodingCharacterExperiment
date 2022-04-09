@@ -865,6 +865,8 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		self.cached=cached
 
+		print("here")
+
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
@@ -880,6 +882,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 				g.requires_grad = False
 
 	def training_step(self, x, batch_idx):
+		print("Training Step")
 		ctc_loss = self.shared_step(x, batch_idx)
 		self.log("train_loss", ctc_loss)
 
@@ -945,6 +948,7 @@ class CPCAudioVisualModelV2(nn.Module):
 		if padVideo:
 			encodedVideo = F.pad(encodedVideo, (0, encodedAudio.shape[2]-encodedVideo.shape[2]))
 
+		print("Pre Deep AVSR")
 		#run context AR network
 		jointDecoded = self.gAR(encodedAudio,encodedVideo)
 
@@ -1000,7 +1004,7 @@ class CPCAudioVisualARV2(nn.Module):
 		# jointBatch = self.outputConv(jointBatch)
 		# jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
 		# outputBatch = F.log_softmax(jointBatch, dim=2)
-
+		print("Finishing joint forward")
 		return outputBatch
 
 class CTCCharacterCriterionV2(torch.nn.Module):
