@@ -755,30 +755,6 @@ class CTCCharacterCriterion(torch.nn.Module):
 
 		return loss
 
-class PositionalEncoding(nn.Module):
-
-	"""
-	A layer to add positional encodings to the inputs of a Transformer model.
-	Formula:
-	PE(pos,2i) = sin(pos/10000^(2i/d_model))
-	PE(pos,2i+1) = cos(pos/10000^(2i/d_model))
-	"""
-
-	def __init__(self, dModel, maxLen):
-		super(PositionalEncoding, self).__init__()
-		pe = torch.zeros(maxLen, dModel)
-		position = torch.arange(0, maxLen, dtype=torch.float).unsqueeze(dim=-1)
-		denominator = torch.exp(torch.arange(0, dModel, 2).float()*(math.log(10000.0)/dModel))
-		pe[:, 0::2] = torch.sin(position/denominator)
-		pe[:, 1::2] = torch.cos(position/denominator)
-		pe = pe.unsqueeze(dim=0).transpose(0, 1)
-		self.register_buffer("pe", pe)
-
-
-	def forward(self, inputBatch):
-		outputBatch = inputBatch + self.pe[:inputBatch.shape[0],:,:]
-		return outputBatch
-
 class ChannelNorm(nn.Module):
 
 	def __init__(self,
@@ -901,6 +877,8 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 	def shared_step(self, data, batch_idx):
 		x, x_len, label, label_len = data
+
+		print(x)
 
 		if not self.cached:
 			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True)
