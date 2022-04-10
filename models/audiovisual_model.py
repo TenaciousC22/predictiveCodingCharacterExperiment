@@ -856,7 +856,6 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 				g.requires_grad = False
 
 	def training_step(self, x, batch_idx):
-		print(batch_idx)
 		ctc_loss = self.shared_step(x, batch_idx)
 		self.log("train_loss", ctc_loss)
 
@@ -877,6 +876,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 	def shared_step(self, data, batch_idx):
 		x, x_len, label, label_len = data
 
+		print(batch_idx)
 		# for entry in x:
 		# 	print(entry)
 
