@@ -841,8 +841,6 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 
 		self.cached=cached
 
-		print("here")
-
 		if src_checkpoint_path is not None:
 			checkpoint = torch.load(src_checkpoint_path)
 			self.load_state_dict(checkpoint['state_dict'], strict=False)
