@@ -877,8 +877,6 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		x, x_len, label, label_len = data
 
 		print(batch_idx)
-		for entry in x:
-			print(entry.shape)
 
 		if not self.cached:
 			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True)
