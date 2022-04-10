@@ -878,7 +878,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 	def shared_step(self, data, batch_idx):
 		x, x_len, label, label_len = data
 
-		print(x.shape())
+		print(type(x))
 
 		if not self.cached:
 			cFeature, encodedData, label = self.cpc_model(x, label, padVideo=True)
