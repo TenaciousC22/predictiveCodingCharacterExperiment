@@ -22,9 +22,9 @@ base_dir = "/home/analysis/Documents/studentHDD/datasets/LRS2"
 
 lrs2_path = os.path.join(base_dir, "mvlrs_v1")
 
-train_txt_path = os.path.join(base_dir, "txts/pretrain.txt")
-train_ids = LRS2UnsupervisedLoader(file_path=train_txt_path).load()+LRS2UnsupervisedLoader(file_path=train_txt_path.replace("pretrain", "train")).load()
-training_set = LRS2UnsupervisedDataset(train_ids, lrs2_path, params['batch_size'])
+training_txt_path = os.path.join(base_dir, "txts/pretrain.txt")
+training_ids = LRS2UnsupervisedLoader(file_path=training_txt_path).load()+LRS2UnsupervisedLoader(file_path=train_txt_path.replace("pretrain", "train")).load()
+training_set = LRS2UnsupervisedDataset(training_ids, lrs2_path, params['batch_size'])
 training_generator = data.DataLoader(training_set, **params)
 
 test_txt_path = os.path.join(base_dir, "txts/val.txt")
