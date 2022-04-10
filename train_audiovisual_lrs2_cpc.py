@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils import data
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from generators.librispeech import LibrispeechUnsupervisedDataset, LibrispeechUnsupervisedLoader, \
+from generators.librispeech import LibrispeechUnsupervisedDataset, LibrispeechUnsupervisedLoader,
     LRS2UnsupervisedLoader, LRS2UnsupervisedDataset
 from models.audiovisual_model import FBAudioVisualCPCLightning
 
