@@ -308,10 +308,12 @@ class LRS2UnsupervisedLoader():
 
 class hybridNetworkDataset():
     'Characterizes a dataset for PyTorch'
-    def __init__(self, list_IDs, dataset_dir, batch_size, return_lens=False):
+    def __init__(self, list_IDs, dataset_dir, batch_size, return_lens=False, sample_len=20480, video_sample_len=32):
         'Initialization'
         maxlen = len(list_IDs)-(len(list_IDs)%batch_size)
         self.list_IDs = list_IDs[:maxlen]
+        self.sample_len=sample_len
+        self.video_sample_len=video_sample_len
 
         self.dataset_dir = dataset_dir
         self.return_lens = return_lens
@@ -326,16 +328,20 @@ class hybridNetworkDataset():
         ID = self.list_IDs[index]
 
         x_audio_data, _ = librosa.load(os.path.join(self.dataset_dir, ID + '.wav'), sr=16000)
-        y_data = np.load(os.path.join(self.dataset_dir, ID+'-chars.npy'))
+        x_audio_data = pad_along_axis(x_audio_data, self.sample_len, axis=0)
+
+        randstart = random.randint(0, len(x_audio_data) - self.sample_len)
 
         # Load data and get label
-        X_audio = torch.from_numpy(x_audio_data).float()
+        X_audio = torch.from_numpy(x_audio_data[randstart:randstart+self.sample_len]).float()
         X_audio = X_audio.unsqueeze(0)
 
+        randstart_visual = randstart // 640
+
         X_visual_data = np.load(os.path.join(self.dataset_dir, ID + '.npy')).T
-        X_visual = torch.from_numpy(X_visual_data).float()
+        X_visual = X_visual_data[randstart_visual:randstart_visual+self.video_sample_len,:].T
 
-
+        y_data = np.load(os.path.join(self.dataset_dir, ID+'-chars.npy'))
         Y = torch.from_numpy(y_data).int()
 
         if not self.return_lens:
