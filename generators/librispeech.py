@@ -254,7 +254,7 @@ class LRS2AudioVisualPhonemeDataset(data.Dataset):
             return X_audio, X_visual, X_len, Y, Y_len
 
 class LRS2UnsupervisedDataset(data.Dataset):
-    'Characterizes a dataset for PyTorch'
+    #Characterizes a dataset for PyTorch
     def __init__(self, list_IDs, dataset_dir, batch_size, sample_len=20480, video_sample_len=32):
         'Initialization'
         maxlen = len(list_IDs)-(len(list_IDs)%batch_size)
@@ -305,3 +305,43 @@ class LRS2UnsupervisedLoader():
                 self.ids.append(row.split(" ")[0].strip())
 
         return self.ids
+
+class hybridNetworkDataset():
+    'Characterizes a dataset for PyTorch'
+    def __init__(self, list_IDs, dataset_dir, batch_size, return_lens=False):
+        'Initialization'
+        maxlen = len(list_IDs)-(len(list_IDs)%batch_size)
+        self.list_IDs = list_IDs[:maxlen]
+
+        self.dataset_dir = dataset_dir
+        self.return_lens = return_lens
+
+    def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.list_IDs)
+
+    def __getitem__(self, index):
+        'Generates one sample of data'
+        # Select sample
+        ID = self.list_IDs[index]
+
+        x_audio_data, _ = librosa.load(os.path.join(self.dataset_dir, ID + '.wav'), sr=16000)
+        y_data = np.load(os.path.join(self.dataset_dir, ID+'-chars.npy'))
+
+        # Load data and get label
+        X_audio = torch.from_numpy(x_audio_data).float()
+        X_audio = X_audio.unsqueeze(0)
+
+        X_visual_data = np.load(os.path.join(self.dataset_dir, ID + '.npy')).T
+        X_visual = torch.from_numpy(X_visual_data).float()
+
+
+        Y = torch.from_numpy(y_data).int()
+
+        if not self.return_lens:
+            return X_audio, X_visual, Y
+        else:
+            X_len = torch.LongTensor([x_audio_data.shape[0]])
+            Y_len = torch.LongTensor([y_data.shape[0]])
+
+            return X_audio, X_visual, X_len, Y, Y_len
