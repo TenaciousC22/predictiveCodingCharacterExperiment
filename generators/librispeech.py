@@ -342,7 +342,7 @@ class hybridNetworkDataset():
         X_visual = X_visual_data[randstart_visual:randstart_visual+self.video_sample_len,:].T
 
         #pad for rounding issue
-        X_visual = pad_along_axis(X+visual, self.video_sample_len,  axis=1)
+        X_visual = pad_along_axis(X_visual, self.video_sample_len,  axis=1)
 
         y_data = np.load(os.path.join(self.dataset_dir, ID+'-chars.npy'))
         Y = torch.from_numpy(y_data).int()
