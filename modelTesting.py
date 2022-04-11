@@ -37,4 +37,4 @@ test_generator = data.DataLoader(test_set, **val_params)
 network = CPCCharacterClassifierV3(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=False, cached=False)
 
 trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='val_loss', patience=10)], default_root_dir="hybrid_character_classifier_lightning_logs")
-#trainer.fit(network, training_generator, test_generator)
+trainer.fit(network, training_generator, test_generator)
