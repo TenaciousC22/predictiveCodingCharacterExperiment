@@ -874,6 +874,7 @@ class CPCCharacterClassifierV3(pl.LightningModule):
 		return ctc_loss
 
 	def shared_step(self, data, batch_idx):
+		print(data)
 		x, x_len, label, label_len = data
 
 		print(batch_idx)
