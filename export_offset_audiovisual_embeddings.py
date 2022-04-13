@@ -99,5 +99,5 @@ for file in tqdm(jobs):
 
 	embedding = torch.squeeze(embedding).detach().cpu().numpy()
 
-	#print(embedding.shape)
+	print(dest)
 	#np.save(dest, embedding)
