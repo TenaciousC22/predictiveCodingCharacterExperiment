@@ -81,20 +81,7 @@ dest_dir = "/home/analysis/Documents/studentHDD/chris/monoSubclips_embeddings/"
 
 train_output = True
 
-files,dumb,test=createDatasetPaths()
-
-jobs = []
-for entry in files:
-	jobs.append((libri_path,entry))
-
-# for folder in os.listdir(libri_path):
-
-# 	for file in os.listdir(os.path.join(libri_path, folder)):
-
-# 			if not file.endswith('.wav'):
-# 				continue
-
-# 			jobs.append((folder, file))
+jobs,dumb,test=createDatasetPaths()
 
 for entry in jobs:
 	print(entry)
