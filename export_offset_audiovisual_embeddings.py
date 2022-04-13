@@ -8,15 +8,63 @@ from tqdm import tqdm
 from generators.librispeech import LibrispeechUnsupervisedDataset, LibrispeechUnsupervisedLoader
 from models.audiovisual_model import FBAudioVisualCPCLightning
 
-# def download_state_dict(model_name):
-#
-#     base_url = "https://dl.fbaipublicfiles.com/librilight/CPC_checkpoints"
-#     return torch.hub.load_state_dict_from_url(f"{base_url}/{model_name}", map_location='cuda:0')
-#
-# state_dict = download_state_dict("60k_epoch4-d0f474de.pt")
-#
-# config = state_dict["config"]
-# weights = state_dict["weights"]
+index2char={0:" ", 21:"'", 29:"1", 28:"0", 36:"3", 31:"2", 33:"5", 37:"4", 35:"7", 34:"6", 30:"9", 32:"8",
+	4:"A", 16:"C", 19:"B", 1:"E", 11:"D", 15:"G", 18:"F", 5:"I", 8:"H", 23:"K", 24:"J", 17:"M",
+	10:"L", 3:"O", 6:"N", 26:"Q", 20:"P", 7:"S", 9:"R", 12:"U", 2:"T", 14:"W", 22:"V", 13:"Y",
+	25:"X", 27:"Z", 38:""}    #index to character reverse mapping
+
+offsetMap={
+	0:"I840",
+	1:"I720",
+	2:"I600",
+	3:"I480",
+	4:"I360",
+	5:"I240",
+	6:"I060",
+	7:"base",
+	8:"B060",
+	9:"B240",
+	10:"B360",
+	11:"B480",
+	12:"B600",
+	13:"B720",
+	14:"B840",
+	15:"jumble"
+}
+
+def levenshtein(a, b):
+	"Calculates the Levenshtein distance between a and b."
+	n, m = len(a), len(b)
+	if n > m:
+		# Make sure n <= m, to use O(min(n,m)) space
+		a, b = b, a
+		n, m = m, n
+
+	current = list(range(n+1))
+	for i in range(1, m+1):
+		previous, current = current, [i]+[0]*n
+		for j in range(1, n+1):
+			add, delete = previous[j]+1, current[j-1]+1
+			change = previous[j-1]
+			if a[j-1] != b[i-1]:
+				change = change + 1
+			current[j] = min(add, delete, change)
+
+	return current[n]
+
+def createDatasetPaths():
+	paths=[]
+	speakers=[]
+	clips=[]
+
+	for x in range(6):
+		for y in range(28):
+			for key in offsetMap:
+				speakers.append(x+1)
+				clips.append(y+1)
+				paths.append("speaker"+str(x+1)+"clip"+str(y+1)+offsetMap[key]+".wav")
+
+	return paths, speakers, clips
 
 model = FBAudioVisualCPCLightning(batch_size=1).cuda()
 
@@ -28,21 +76,30 @@ checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCod
 model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
-libri_path = "/home/analysis/Documents/studentHDD/chris/monoSubclips"
-dest_dir = "/home/analysis/Documents/studentHDD/chris/monoSubclips_embeddings"
+libri_path = "/home/analysis/Documents/studentHDD/chris/monoSubclips/"
+dest_dir = "/home/analysis/Documents/studentHDD/chris/monoSubclips_embeddings/"
 
 train_output = True
 
+files=createDatasetPaths()
+
 jobs = []
+for entry in files:
+	jobs.append((libri_path,entry))
 
-for folder in os.listdir(libri_path):
+# for folder in os.listdir(libri_path):
 
-	for file in os.listdir(os.path.join(libri_path, folder)):
+# 	for file in os.listdir(os.path.join(libri_path, folder)):
 
-			if not file.endswith('.wav'):
-				continue
+# 			if not file.endswith('.wav'):
+# 				continue
 
-			jobs.append((folder, file))
+# 			jobs.append((folder, file))
+
+for entry in jobs:
+	print(entry)
+
+return
 
 for folder, file in tqdm(jobs):
 	if not train_output:
