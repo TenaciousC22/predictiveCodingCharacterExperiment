@@ -49,3 +49,16 @@ for folder, file in tqdm(jobs):
 		dest = os.path.join(dest_dir, folder+'-'+file.replace('.wav', '.npy'))
 	else:
 		dest = os.path.join(dest_dir, folder, file.replace('.wav', '.npy'))
+
+	if not os.path.exists(os.path.join(dest_dir, folder)):
+		os.makedirs(os.path.join(dest_dir, folder))
+
+	x_audio, _ = librosa.load(os.path.join(libri_path, folder, file), sr=16000)
+	x_visual = np.load(os.path.join(libri_path, folder, file.replace('.wav', '.npy')))
+
+	x_audio_tensor = torch.from_numpy(x_audio).unsqueeze(0).unsqueeze(0).cuda()
+	x_visual_tensor = torch.from_numpy(x_visual.T).unsqueeze(0).cuda()
+
+	embedding = model.embedding((x_audio_tensor, x_visual_tensor), context=True, audioVisual=True, norm=False)
+
+	embedding = torch.squeeze(embedding).detach().cpu().numpy()
