@@ -81,7 +81,7 @@ dest_dir = "/home/analysis/Documents/studentHDD/chris/monoSubclips_embeddings/"
 
 train_output = True
 
-files=createDatasetPaths()
+files,dumb,test=createDatasetPaths()
 
 jobs = []
 for entry in files:
