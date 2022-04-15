@@ -9,11 +9,11 @@ from generators.librispeech import LRS2AudioVisualPhonemeDataset, LRS2Unsupervis
 from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightning, CPCCharacterClassifierV3, embeddingDecoder
 from util.pad import audiovisual_batch_collate, audiovisual_embedding_batch_collate
 
-params={'batch_size': 8,
+params={'batch_size': 10,
 		'shuffle': True,
 		'num_workers': 3}
 
-val_params={'batch_size': 8,
+val_params={'batch_size': 10,
 		'shuffle': False,
 		'num_workers': 3}
 
