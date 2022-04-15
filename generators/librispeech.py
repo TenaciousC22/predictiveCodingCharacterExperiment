@@ -211,6 +211,8 @@ class LRS2AudioVisualCachedCharacterDataset(data.Dataset):
         Y = torch.from_numpy(y_data).int()
         Y_len = torch.LongTensor([y_data.shape[0]])
 
+        print(x)
+
         return X, X_len, Y, Y_len
 
 class LRS2AudioVisualPhonemeDataset(data.Dataset):
