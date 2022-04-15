@@ -211,7 +211,7 @@ class LRS2AudioVisualCachedCharacterDataset(data.Dataset):
         Y = torch.from_numpy(y_data).int()
         Y_len = torch.LongTensor([y_data.shape[0]])
 
-        print(X.shape)
+        #print(X.shape)
 
         return X, X_len, Y, Y_len
 
