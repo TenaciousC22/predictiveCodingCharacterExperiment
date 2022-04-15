@@ -77,7 +77,7 @@ model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 libri_path = "/home/analysis/Documents/studentHDD/chris/monoSubclips/"
-dest_dir = "/home/analysis/Documents/studentHDD/chris/monoSubclips_embeddings/"
+dest_dir = "/home/analysis/Documents/studentHDD/chris/monoSubclips_audiovisual_embeddings/"
 
 train_output = True
 

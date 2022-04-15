@@ -23,7 +23,7 @@ src_ckpt='/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExp
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
 
 train_ids = LRS2UnsupervisedLoader(file_path=train_txt_path).load()
-training_set = hybridNetworkDataset(train_ids, lrs2_path, params['batch_size'], return_lens=True)
+training_set = LRS2AudioVisualCachedCharacterDataset(train_ids, lrs2_path, params['batch_size'], return_lens=True)
 #training_generator = data.DataLoader(training_set, collate_fn=audiovisual_batch_collate, **params)
 training_generator = data.DataLoader(training_set, **params)
 
@@ -34,7 +34,7 @@ test_set = hybridNetworkDataset(test_ids, lrs2_path, val_params['batch_size'], r
 #test_generator = data.DataLoader(test_set, collate_fn=audiovisual_batch_collate, **val_params)
 test_generator = data.DataLoader(test_set, **val_params)
 
-network = CPCCharacterClassifierV3(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=False, cached=False)
+#network = CPCCharacterClassifierV3(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=False, cached=False)
 
-trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='val_loss', patience=10)], default_root_dir="hybrid_character_classifier_lightning_logs")
-trainer.fit(network, training_generator, test_generator)
+# trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='val_loss', patience=10)], default_root_dir="hybrid_character_classifier_lightning_logs")
+# trainer.fit(network, training_generator, test_generator)

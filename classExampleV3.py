@@ -149,7 +149,7 @@ class CPCAudioVisualARV2(nn.Module):
 		jointBatch = self.jointConv(jointBatch)
 		jointBatch=jointBatch.transpose(1, 2).transpose(0, 1)
 
-		jointBatch = slef.jointDecoder(jointBatch)
+		jointBatch = self.jointDecoder(jointBatch)
 		output = jointBatch.transpose(0, 1).transpose(1, 2)
 		# jointBatch = self.outputConv(jointBatch)
 		# jointBatch = jointBatch.transpose(1, 2).transpose(0, 1)
