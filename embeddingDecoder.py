@@ -1,6 +1,6 @@
 class embeddingDecoder(pl.LightningModule):
 	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, visualFeatureDim=512, numHeads=8, numLayers=6, numLevelsGRU=1, peMaxLen=2500, inSize=256,
-			fcHiddenSize=2048, dropout=0.1, numClasses=38, encoder="audio", LSTM=False, freeze=True):
+			fcHiddenSize=2048, dropout=0.1, numClasses=38, LSTM=False, freeze=True):
 		super(embeddingDecoder, self).__init__()
 		self.dim_size = dim_size
 		self.batch_size = batch_size
@@ -35,15 +35,14 @@ class embeddingDecoder(pl.LightningModule):
 	def shared_step(self, data, batch_idx):
 		x, x_len, label, label_len = data
 
-		batch = self.model(x)
-
-		allLosses = self.character_criterion(batch, x_len, label, label_len)
+		x = self.model(x)
+		allLosses = self.character_criterion(x, x_len, label, label_len)
 
 		loss = allLosses.sum()
 		return loss
 
 	def get_predictions(self, x):
-		cFeature, decodedData, label = self.cpc_model(x, None, padVideo=True)
+		cFeature = self.model(x)
 		predictions = torch.nn.functional.softmax(self.character_criterion.getPrediction(cFeature), dim=2)
 
 		return predictions
@@ -65,13 +64,8 @@ class decoderModel(nn.Module):
 
 		#Declare joint decoder
 		self.jointDecoder = nn.TransformerEncoder(encoderLayer, num_layers=numLayers)
-		#self.outputConv = nn.Conv1d(dim_size, numClasses, kernel_size=1, stride=1, padding=0)
 
 		self.cached = cached
-
-	#Gets DIM size output? pretty sure this was for debugging
-	# def getDimOutput(self):
-	# 	return self.baseNet.hidden_size
 
 	#Feed forward function
 	def forward(self, jointBatch):
