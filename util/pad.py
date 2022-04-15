@@ -29,7 +29,6 @@ def audio_batch_collate(batch):
 
 def audiovisual_batch_collate(batch):
     # batch contains a list of tuples of structure (sequence, target)
-    print(batch)
     audio_data = [item[0].permute(1, 0) for item in batch]
     visual_data = [item[1].permute(1, 0) for item in batch]
 
