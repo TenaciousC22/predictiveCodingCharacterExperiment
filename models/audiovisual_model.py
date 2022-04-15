@@ -1190,6 +1190,8 @@ class decoderModel(nn.Module):
 		# jointBatch = self.jointConv(jointBatch)
 		jointBatch=jointBatch.transpose(1, 2).transpose(0, 1)
 
+		print(jointBatch.shape)
+
 		jointBatch = self.jointDecoder(jointBatch)
 		outputBatch = jointBatch.transpose(0, 1).transpose(1, 2)
 		# jointBatch = self.outputConv(jointBatch)
