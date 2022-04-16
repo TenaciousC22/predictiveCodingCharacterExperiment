@@ -1252,7 +1252,7 @@ class CTCCharacterCriterionV3(torch.nn.Module):
 		return loss
 
 class CPCCharacterClassifierLightningV4(pl.LightningModule):
-	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, freeze=True):
+	def __init__(self, src_checkpoint_path=None, dim_size=256, batch_size=8, encoder="audio", cached=True, LSTM=False, LSTMLayers=1, freeze=True):
 		super().__init__()
 		self.dim_size = dim_size
 		self.batch_size = batch_size
@@ -1267,7 +1267,7 @@ class CPCCharacterClassifierLightningV4(pl.LightningModule):
 		#Applies final convolution
 		self.cpc_model = CPCAudioVisualModelV4(self.audio_encoder, self.visual_encoder, self.ar)
 		#Applies LSTM
-		self.character_criterion = CTCPhoneCriterionV4(self.dim_size, 38, LSTM=LSTM)
+		self.character_criterion = CTCPhoneCriterionV4(self.dim_size, 38, LSTM=LSTM, LSTMLayers=LSTMLayers)
 		#chaches information for fast retrieval
 		self.cached = cached
 
@@ -1448,7 +1448,7 @@ class CPCAudioVisualModelV4(nn.Module):
 
 class CTCPhoneCriterionV4(torch.nn.Module):
 
-	def __init__(self, dimEncoder, nPhones, LSTM=False, sizeKernel=8,
+	def __init__(self, dimEncoder, nPhones, LSTM=False, LSTMLayers=1, sizeKernel=8,
 				 seqNorm=False, dropout=False, reduction='mean'):
 
 		super(CTCPhoneCriterionV4, self).__init__()
@@ -1457,7 +1457,7 @@ class CTCPhoneCriterionV4(torch.nn.Module):
 		self.dropout = torch.nn.Dropout2d(
 			p=0.5, inplace=False) if dropout else None
 		self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder,
-								   num_layers=4, batch_first=True)
+								   num_layers=LSTMLayers, batch_first=True)
 		self.PhoneCriterionClassifier = torch.nn.Conv1d(
 			dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
 		self.lossCriterion = torch.nn.CTCLoss(blank=nPhones,

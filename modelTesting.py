@@ -19,7 +19,7 @@ val_params={'batch_size': 8,
 
 lrs2_path="/home/analysis/Documents/studentHDD/datasets/LRS2/mvlrs_v1"
 #src_ckpt='/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/epoch=50-step=906218.ckpt'
-src_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/hybrid_character_classifier_lightning_logs/lightning_logs/version_1/checkpoints/epoch=10-step=63018.ckpt"
+src_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/one_layer_lstm/lightning_logs/version_1/checkpoints/epoch=10-step=63018.ckpt"
 
 train_txt_path="/home/analysis/Documents/studentHDD/datasets/LRS2/txts/train.txt"
 
@@ -33,7 +33,7 @@ test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
 test_set = LRS2AudioVisualCachedCharacterDataset(test_ids, lrs2_path, val_params['batch_size'])
 test_generator = data.DataLoader(test_set, collate_fn=audiovisual_embedding_batch_collate, **val_params)
 
-network = CPCCharacterClassifierLightningV4(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True)
+network = CPCCharacterClassifierLightningV4(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True, LSTMLayers=1)
 
 trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='train_loss', patience=10)], default_root_dir="hybrid_character_classifier_lightning_logs")
 trainer.fit(network, training_generator, test_generator)
