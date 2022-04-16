@@ -68,7 +68,7 @@ class FBAudioVisualCPCCharacterClassifierLightningV4(pl.LightningModule):
 		return predictions
 
 	def configure_optimizers(self):
-		g_params = list(self.phoneme_criterion.parameters())
+		g_params = list(self.character_criterion.parameters())
 		optimizer = torch.optim.Adam(g_params, lr=2e-4, betas=(0.9, 0.999), eps=1e-08)
 		return optimizer
 
