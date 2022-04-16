@@ -34,5 +34,5 @@ test_generator = data.DataLoader(test_set, collate_fn=audiovisual_embedding_batc
 
 network = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True) 
 
-# trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='val_loss', patience=10)], default_root_dir="lrs2_audiovisual_lstm_character_classifier_lightning_logs")
-# trainer.fit(network, training_generator, test_generator)
+trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='val_loss', patience=10)], default_root_dir="lrs2_audiovisual_lstm_character_classifier_lightning_logs")
+trainer.fit(network, training_generator, test_generator)
