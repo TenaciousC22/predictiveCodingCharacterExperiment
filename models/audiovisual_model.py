@@ -1457,7 +1457,7 @@ class CTCPhoneCriterionV4(torch.nn.Module):
 		self.dropout = torch.nn.Dropout2d(
 			p=0.5, inplace=False) if dropout else None
 		self.conv1 = torch.nn.LSTM(dimEncoder, dimEncoder,
-								   num_layers=1, batch_first=True)
+								   num_layers=4, batch_first=True)
 		self.PhoneCriterionClassifier = torch.nn.Conv1d(
 			dimEncoder, nPhones + 1, sizeKernel, stride=sizeKernel // 2)
 		self.lossCriterion = torch.nn.CTCLoss(blank=nPhones,
