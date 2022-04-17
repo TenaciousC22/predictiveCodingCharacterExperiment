@@ -73,13 +73,13 @@ def createDatasetPaths():
 	return paths, speakers, clips
 
 #Get a full list of all videos with speakers, sentences, and offsets
-per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/8_layer_lstm/lightning_logs/version_0/checkpoints/epoch=46-step=269262.ckpt"
-dest_csv="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/predictiveCodingCharacterResults8LayerLSTM.csv"
+per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/16_layer_lstm/lightning_logs/version_0/checkpoints/epoch=36-step=211972.ckpt"
+dest_csv="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/predictiveCodingCharacterResults16LayerLSTM.csv"
 datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips"
 tensor_output="/home/analysis/Documents/studentHDD/chris/data/"
-output_base_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors_8_layer/"
+output_base_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors_16_layer/"
 
-model = CPCCharacterClassifierLightningV4(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True, LSTMLayers=8).cuda()
+model = CPCCharacterClassifierLightningV4(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True, LSTMLayers=16).cuda()
 per_checkpoint = torch.load(per_ckpt)
 
 model.load_state_dict(per_checkpoint['state_dict'])
