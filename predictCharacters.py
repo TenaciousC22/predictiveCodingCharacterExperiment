@@ -79,7 +79,7 @@ datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips"
 tensor_output="/home/analysis/Documents/studentHDD/chris/data/"
 output_base_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors_4_layer/"
 
-model = CPCCharacterClassifierLightningV4(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True, LSTMLayers=2).cuda()
+model = CPCCharacterClassifierLightningV4(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True, LSTMLayers=4).cuda()
 per_checkpoint = torch.load(per_ckpt)
 
 model.load_state_dict(per_checkpoint['state_dict'])
