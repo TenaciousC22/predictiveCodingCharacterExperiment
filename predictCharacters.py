@@ -9,8 +9,8 @@ import numpy as np
 from progressbar import progressbar
 from tqdm import tqdm
 from torch.multiprocessing import Lock, Manager
-from generators.librispeech import LRS2UnsupervisedLoader, LRS2AudioVisualPhonemeDataset
-from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightning
+from generators.librispeech import LRS2UnsupervisedLoader, LRS2AudioVisualPhonemeDataset, LRS2AudioVisualCachedCharacterDataset
+from models.audiovisual_model import  FBAudioVisualCPCCharacterClassifierLightning, CPCCharacterClassifierLightningV4
 from util.pad import audiovisual_batch_collate
 from util.seq_alignment import beam_search
 
@@ -73,13 +73,13 @@ def createDatasetPaths():
 	return paths, speakers, clips
 
 #Get a full list of all videos with speakers, sentences, and offsets
-per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/lrs2_audiovisual_lstm_character_classifier_lightning_logs/lightning_logs/version_4/checkpoints/epoch=10-step=63018.ckpt"
-dest_csv="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/predictiveCodingCharacterResults.csv"
-datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips/"
+per_ckpt="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/2_layer_lstm/lightning_logs/version_0/checkpoints/epoch=37-step=217701.ckpt"
+dest_csv="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/predictiveCodingCharacterResults2LayerLSTM.csv"
+datasetPath="/home/analysis/Documents/studentHDD/chris/monoSubclips"
 tensor_output="/home/analysis/Documents/studentHDD/chris/data/"
-output_base_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors/"
+output_base_path="/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/tensors_2_layer/"
 
-model = FBAudioVisualCPCCharacterClassifierLightning(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True).cuda()
+model = CPCCharacterClassifierLightningV4(src_checkpoint_path=per_ckpt, batch_size=1, cached=False, LSTM=True, LSTMLayers=2).cuda()
 per_checkpoint = torch.load(per_ckpt)
 
 model.load_state_dict(per_checkpoint['state_dict'])
