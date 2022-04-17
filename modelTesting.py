@@ -33,7 +33,7 @@ test_ids = LRS2UnsupervisedLoader(file_path=test_txt_path).load()
 test_set = LRS2AudioVisualCachedCharacterDataset(test_ids, lrs2_path, val_params['batch_size'])
 test_generator = data.DataLoader(test_set, collate_fn=audiovisual_embedding_batch_collate, **val_params)
 
-network = CPCCharacterClassifierLightningV4(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True, LSTMLayers=8)
+network = CPCCharacterClassifierLightningV4(src_checkpoint_path=src_ckpt, batch_size=params['batch_size'], LSTM=True, LSTMLayers=16)
 
-trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='train_loss', patience=10)], default_root_dir="8_layer_lstm")
+trainer = pl.Trainer(gpus=1, callbacks=[EarlyStopping(monitor='train_loss', patience=10)], default_root_dir="16_layer_lstm")
 trainer.fit(network, training_generator, test_generator)
