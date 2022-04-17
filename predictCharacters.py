@@ -119,7 +119,7 @@ for index, data in tqdm(enumerate(testGenerator), total=len(testGenerator)):
 
 		np.save(output_path,output_arr)
 
-		predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.phoneme_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
+		predSeq = np.array(beam_search(y_hat.cpu().numpy(), 10, model.character_criterion.BLANK_LABEL)[0][1], dtype=np.int32)
 
 		resultArr.append([])
 		resultArr[-1].append(speakers[i])
