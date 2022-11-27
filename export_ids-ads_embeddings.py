@@ -26,7 +26,7 @@ checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCod
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 #model.load_from_checkpoint('fb_lightning_logs/lightning_logs/version_1/checkpoints/epoch=45-step=1617083.ckpt')
-model.load_state_dict(checkpoint['state_dict'])
+# model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 libri_path = "/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds"
