@@ -21,16 +21,15 @@ from models.audio_model import  FBAudioCPCLightning
 
 model = FBAudioCPCLightning(batch_size=1).cuda()
 
-checkpoint_url = 'https://dl.fbaipublicfiles.com/librilight/CPC_checkpoints/60k_epoch4-d0f474de.pt'
-checkpoint = torch.hub.load_state_dict_from_url(checkpoint_url,
-														progress=False)
+# checkpoint_url = 'https://dl.fbaipublicfiles.com/librilight/CPC_checkpoints/60k_epoch4-d0f474de.pt'
+# checkpoint = torch.hub.load_state_dict_from_url(checkpoint_url,progress=False)
 
-# checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/60k_epoch4-d0f474de.pt')
+checkpoint = torch.load('/home/lukas/Dev/speech_cpc/logs/lrs2_audio_only_lightning_logs/lightning_logs/version_0/checkpoints/epoch=60-step=1083908.ckpt')
 
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 #model.load_from_checkpoint('fb_lightning_logs/lightning_logs/version_1/checkpoints/epoch=45-step=1617083.ckpt')
-# model.load_state_dict(checkpoint['state_dict'])
+model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 libri_path = "/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds"
