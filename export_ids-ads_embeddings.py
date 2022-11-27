@@ -36,11 +36,9 @@ train_output = False
 
 jobs = []
 
-for folder in os.listdir(libri_path):
+for file in os.listdir(libri_path):
 
-	for file in os.listdir(os.path.join(libri_path, folder)):
+	if not file.endswith('.wav'):
+		continue
 
-			if not file.endswith('.wav'):
-				continue
-
-			jobs.append((folder, file))
+	jobs.append((folder, file))
