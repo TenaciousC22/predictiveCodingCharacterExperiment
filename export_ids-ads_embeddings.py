@@ -21,12 +21,12 @@ from models.audio_model import  FBAudioCPCLightning
 
 model = FBAudioCPCLightning(batch_size=1).cuda()
 
-checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/epoch=50-step=906218.ckpt')
+checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/60k_epoch4-d0f474de.pt')
 
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 #model.load_from_checkpoint('fb_lightning_logs/lightning_logs/version_1/checkpoints/epoch=45-step=1617083.ckpt')
-# model.load_state_dict(checkpoint['state_dict'])
+model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 libri_path = "/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds"
