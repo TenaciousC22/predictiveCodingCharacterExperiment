@@ -44,7 +44,7 @@ for file in os.listdir(libri_path):
 	if not file.endswith('.wav'):
 		continue
 
-	jobs.append((libri_path, file))
+	jobs.append((dest_dir, file))
 
 for folder, file in tqdm(jobs):
 	if not train_output:
