@@ -24,7 +24,7 @@ model = FBAudioCPCLightning(batch_size=1).cuda()
 # checkpoint_url = 'https://dl.fbaipublicfiles.com/librilight/CPC_checkpoints/60k_epoch4-d0f474de.pt'
 # checkpoint = torch.hub.load_state_dict_from_url(checkpoint_url,progress=False)
 
-checkpoint = torch.load('/home/lukas/Dev/speech_cpc/lrs2_audio_only_lightning_logs/lightning_logs/version_0/checkpoints/epoch=60-step=1083908.ckpt')
+checkpoint = torch.load('/home/analysis/Dev/speech_cpc/lrs2_audio_only_lightning_logs/lightning_logs/version_0/checkpoints/epoch=60-step=1083908.ckpt')
 
 #print(model.cpc_model.gEncoder.conv0.weight)
 
