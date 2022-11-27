@@ -33,7 +33,7 @@ model.load_state_dict(checkpoint['state_dict'])
 #print(model.cpc_model.gEncoder.conv0.weight)
 
 libri_path = "/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds"
-dest_dir = "/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds-embed/"
+dest_dir = "/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds-embed"
 
 train_output = False
 
@@ -44,21 +44,18 @@ for file in os.listdir(libri_path):
 	if not file.endswith('.wav'):
 		continue
 
-	jobs.append((dest_dir, file))
+	jobs.append(file)
 
-for folder, file in tqdm(jobs):
+for file in tqdm(jobs):
 	if not train_output:
-		dest = os.path.join(dest_dir, folder+'-'+file.replace('.wav', '.npy'))
+		dest = os.path.join(dest_dir, file.replace('.wav', '.npy'))
 	else:
-		dest = os.path.join(dest_dir, folder, file.replace('.wav', '.npy'))
+		dest = os.path.join(dest_dir, file.replace('.wav', '.npy'))
 
 	# if os.path.exists(dest):
 	#     continue
 
-	if not os.path.exists(os.path.join(dest_dir, folder)):
-		os.makedirs(os.path.join(dest_dir, folder))
-
-	x, _ = librosa.load(os.path.join(libri_path, folder, file), sr=16000)
+	x, _ = librosa.load(os.path.join(libri_path, file), sr=16000)
 
 	x_tensor = torch.from_numpy(x).unsqueeze(0).unsqueeze(0).cuda()
 
