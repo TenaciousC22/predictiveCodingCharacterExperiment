@@ -41,4 +41,4 @@ for file in os.listdir(libri_path):
 	if not file.endswith('.wav'):
 		continue
 
-	jobs.append((folder, file))
+	jobs.append((libri_path, file))
