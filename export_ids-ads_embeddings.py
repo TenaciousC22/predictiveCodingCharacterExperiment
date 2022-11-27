@@ -21,7 +21,11 @@ from models.audio_model import  FBAudioCPCLightning
 
 model = FBAudioCPCLightning(batch_size=1).cuda()
 
-checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/60k_epoch4-d0f474de.pt')
+checkpoint_url = 'https://dl.fbaipublicfiles.com/librilight/CPC_checkpoints/60k_epoch4-d0f474de.pt'
+checkpoint = torch.hub.load_state_dict_from_url(checkpoint_url,
+														progress=False)
+
+# checkpoint = torch.load('/home/analysis/Documents/studentHDD/chris/predictiveCodingCharacterExperiment/base_model/60k_epoch4-d0f474de.pt')
 
 #print(model.cpc_model.gEncoder.conv0.weight)
 
