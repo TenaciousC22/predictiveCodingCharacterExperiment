@@ -43,7 +43,7 @@ for x in tqdm(range(10)):
 
 	print(adsNumpy.shape)
 	print()
-	vals.append(distance.cosine(idsNumpy,adsNumpy))
+	vals.append(distance.cdist(idsNumpy,adsNumpy,'cosine'))
 
 for val in vals:
 	print(val)
