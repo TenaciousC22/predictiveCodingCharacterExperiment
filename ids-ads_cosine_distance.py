@@ -20,11 +20,11 @@ ids=[]
 for file in files:
 	if file[-5]=="B":
 		ids.append(file)
-	if files[-5]=="D":
+	if file[-5]=="D":
 		ads.append(file)
 
-# ids.sort()
-# ads.sort()
+ids.sort()
+ads.sort()
 
 vals=[]
 for idsFile in tqdm(ids):
