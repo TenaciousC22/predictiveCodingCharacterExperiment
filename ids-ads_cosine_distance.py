@@ -29,6 +29,7 @@ ads.sort()
 vals=[]
 for idsFile in tqdm(ids):
 	idsNumpy=np.load(os.path.join(lib_path,idsFile))
+	print(idsNumpy.shape())
 	for adsFile in ads:
 		adsNumpy=np.load(os.path.join(lib_path,adsFile))
 		vals.append(distance.cosine(idsNumpy,adsNumpy))
