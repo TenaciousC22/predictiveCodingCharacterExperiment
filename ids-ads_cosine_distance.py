@@ -2,6 +2,7 @@ import os
 import numpy as np
 from scipy.spatial import distance
 from tqdm import tqdm
+import random
 
 lib_path="/home/analysis/Documents/studentHDD/chris/IDS-corpus-edited-ds-embed"
 
@@ -27,11 +28,11 @@ ids.sort()
 ads.sort()
 
 vals=[]
-for idsFile in tqdm(ids):
-	idsNumpy=np.load(os.path.join(lib_path,idsFile))
-	print(idsNumpy.shape)
-	for adsFile in ads:
-		adsNumpy=np.load(os.path.join(lib_path,adsFile))
-		vals.append(distance.cdist(idsNumpy,adsNumpy,'cosine'))
+for x in tqdm(range(10)):
+	idsNumpy=np.load(os.path.join(lib_path,ids[random.randint(0,len(ids)-1)]))
+	# print(idsNumpy.shape)
+	adsNumpy=np.load(os.path.join(lib_path,ads[random.randint(0,len(ads)-1)]))
+	vals.append(distance.cdist(idsNumpy,adsNumpy,'cosine'))
 
-print(len(vals))
+for val in vals:
+	print(val)
