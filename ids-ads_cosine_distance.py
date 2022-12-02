@@ -32,6 +32,6 @@ for idsFile in tqdm(ids):
 	print(idsNumpy.shape)
 	for adsFile in ads:
 		adsNumpy=np.load(os.path.join(lib_path,adsFile))
-		vals.append(distance.cosine(idsNumpy,adsNumpy))
+		vals.append(distance.cdist(idsNumpy,adsNumpy,'cosine'))
 
 print(len(vals))
