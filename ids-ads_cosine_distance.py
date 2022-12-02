@@ -16,6 +16,13 @@ for file in os.listdir(lib_path):
 
 files.sort()
 
+# x=0
+# while x<len(files):
+# 	if(files[x][0:3]!="TOR"):
+# 		del files[x]
+# 	else:
+# 		x+=1
+
 ads=[]
 ids=[]
 for file in files:
@@ -29,10 +36,14 @@ ads.sort()
 
 vals=[]
 for x in tqdm(range(10)):
-	idsNumpy=np.load(os.path.join(lib_path,ids[random.randint(0,len(ids)-1)]))
+	idsNumpy=np.load(os.path.join(lib_path,ids[random.randint(0,len(ids)-1)])).flatten()
+
 	# print(idsNumpy.shape)
-	adsNumpy=np.load(os.path.join(lib_path,ads[random.randint(0,len(ads)-1)]))
-	vals.append(distance.cdist(idsNumpy,adsNumpy,'cosine'))
+	adsNumpy=np.load(os.path.join(lib_path,ads[random.randint(0,len(ads)-1)])).flatten()
+
+	print(adsNumpy.shape)
+	print()
+	vals.append(distance.cosine(idsNumpy,adsNumpy))
 
 for val in vals:
 	print(val)
