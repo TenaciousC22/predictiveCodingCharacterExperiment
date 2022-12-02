@@ -36,13 +36,13 @@ ads.sort()
 
 vals=[]
 for x in tqdm(range(10)):
-	idsNumpy=np.load(os.path.join(lib_path,ids[random.randint(0,len(ids)-1)])).flatten()
+	idsNumpy=np.load(os.path.join(lib_path,ids[random.randint(0,len(ids)-1)]))
 
 	# print(idsNumpy.shape)
-	adsNumpy=np.load(os.path.join(lib_path,ads[random.randint(0,len(ads)-1)])).flatten()
+	adsNumpy=np.load(os.path.join(lib_path,ads[random.randint(0,len(ads)-1)]))
 
 	print(adsNumpy.shape)
-	print()
+	print(idsNumpy.shape)
 	vals.append(distance.cdist(idsNumpy,adsNumpy,'cosine'))
 
 for val in vals:
