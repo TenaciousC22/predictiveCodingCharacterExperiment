@@ -24,8 +24,11 @@ for file in files:
 ids.sort()
 ads.sort()
 
+vals=[]
 for idsFile in tqdm(ids):
 	idsNumpy=np.load(os.path.join(lib_path,idsFile))
 	for adsFile in ads:
 		adsNumpy=np.load(os.path.join(lib_path,adsFile))
-		temp=distance.cosine(idsNumpy,adsNumpy)
+		vals.append(distance.cosine(idsNumpy,adsNumpy))
+
+print(len(vals))
